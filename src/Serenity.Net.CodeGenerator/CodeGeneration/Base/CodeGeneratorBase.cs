@@ -1,37 +1,49 @@
-﻿using Serenity.Reflection;
+namespace Serenity.CodeGeneration;
 
-namespace Serenity.CodeGeneration
+public abstract class CodeGeneratorBase
 {
-    public abstract class CodeGeneratorBase
+    protected List<GeneratedSource> generatedCode;
+    protected StringBuilder sb;
+    protected CodeWriter cw;
+
+    public CodeGeneratorBase()
     {
-        private SortedDictionary<string, string> generatedCode;
-        protected StringBuilder sb;
-        protected CodeWriter cw;
-
-        public CodeGeneratorBase()
+        sb = new StringBuilder(4096);
+        cw = new CodeWriter(sb, 4)
         {
-        }
+            GlobalUsings = GlobalUsings
+        };
+    }
 
-        protected virtual void Reset()
-        {
-            sb = new StringBuilder(4096);
-            cw = new CodeWriter(sb, 4);
-            generatedCode = new SortedDictionary<string, string>();
-        }
+    public bool FileScopedNamespaces
+    {
+        get => cw.FileScopedNamespaces;
+        set => cw.FileScopedNamespaces = value;
+    }
 
-        protected void AddFile(string filename)
-        {
-            generatedCode[filename] = sb.ToString();
-            sb.Clear();
-        }
+    public readonly HashSet<string> GlobalUsings = new();
 
-        protected abstract void GenerateAll();
+    protected virtual void Reset()
+    {
+        sb.Clear();
+        generatedCode = new();
+    }
 
-        public SortedDictionary<string, string> Run()
-        {
-            Reset();
-            GenerateAll();
-            return generatedCode;
-        }
+    protected virtual void AddFile(string filename, bool module = false)
+    {
+        var text = cw.ToString();
+        generatedCode.Add(new GeneratedSource(filename, text, module));
+        sb.Clear();
+        cw.LocalUsings?.Clear();
+        cw.CurrentNamespace = null;
+    }
+
+    protected abstract void GenerateAll();
+
+    public List<GeneratedSource> Run()
+    {
+        Reset();
+        GenerateAll();
+        return generatedCode;
     }
 }

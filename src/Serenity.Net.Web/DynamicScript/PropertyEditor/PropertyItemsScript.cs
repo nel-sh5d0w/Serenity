@@ -1,72 +1,122 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Serenity.PropertyGrid;
 
-namespace Serenity.Web
+namespace Serenity.Web;
+
+/// <summary>
+/// Abstract base class for <see cref="ColumnsScript"/> and <see cref="FormScript"/>
+/// </summary>
+public abstract class PropertyItemsScript : INamedDynamicScript, IGetScriptData
 {
-    public abstract class PropertyItemsScript : INamedDynamicScript
+    private readonly string scriptName;
+    private readonly Type type;
+    private readonly IServiceProvider serviceProvider;
+    private readonly IPropertyItemProvider propertyProvider;
+    private EventHandler scriptChanged;
+
+    /// <summary>
+    /// Creates a new instance of the class
+    /// </summary>
+    /// <param name="scriptName">Script name</param>
+    /// <param name="type">Columns or form type</param>
+    /// <param name="propertyProvider">Property item provider</param>
+    /// <param name="serviceProvider">Service provider</param>
+    protected PropertyItemsScript(string scriptName, Type type, 
+        IPropertyItemProvider propertyProvider, IServiceProvider serviceProvider)
     {
-        public class Data
+        this.type = type ?? throw new ArgumentNullException(nameof(type));
+        this.serviceProvider = serviceProvider ?? 
+            throw new ArgumentNullException(nameof(serviceProvider));
+        this.propertyProvider = propertyProvider ?? 
+            throw new ArgumentNullException(nameof(PropertyItemsScript.propertyProvider));
+        this.scriptName = scriptName;
+    }
+
+    /// <summary>
+    /// Checks the name if its empty or null
+    /// </summary>
+    /// <param name="name"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentNullException"></exception>
+    protected static string CheckName(string name)
+    {
+        if (string.IsNullOrEmpty(name))
+            throw new ArgumentNullException(nameof(name));
+
+        return name;
+    }
+
+    /// <inheritdoc/>
+    public TimeSpan Expiration { get; set; }
+
+    /// <inheritdoc/>
+    public string GroupKey { get; set; }
+
+    /// <inheritdoc/>
+    public void Changed()
+    {
+        scriptChanged?.Invoke(this, new EventArgs());
+    }
+
+    /// <inheritdoc/>
+    public string ScriptName => scriptName;
+
+    /// <inheritdoc/>
+    public void CheckRights(IPermissionService permissions, ITextLocalizer localizer)
+    {
+    }
+
+    /// <inheritdoc/>
+    public string GetScript()
+    {
+        var data = GetScriptData();
+        return string.Format(CultureInfo.InvariantCulture, "Q.ScriptData.set({0}, {1});", 
+            scriptName.ToSingleQuoted(), data.ToJson());
+    }
+
+    /// <inheritdoc/>
+    public object GetScriptData()
+    {
+        var data = new PropertyItemsData
         {
-            public PropertyItem[] Items { get; set; }
+            Items = propertyProvider.GetPropertyItemsFor(type).ToList(),
+            AdditionalItems = new()
+        };
+
+        if (typeof(ICustomizePropertyItems).IsAssignableFrom(type))
+        {
+            var instance = ActivatorUtilities.CreateInstance(
+                serviceProvider, type) as ICustomizePropertyItems;
+            instance.Customize(data.Items);
         }
 
-        private readonly string scriptName;
-        private readonly Type type;
-        private readonly IServiceProvider serviceProvider;
-        private readonly IPropertyItemProvider propertyProvider;
-        private EventHandler scriptChanged;
-
-        protected PropertyItemsScript(string scriptName, Type type, 
-            IPropertyItemProvider propertyProvider, IServiceProvider serviceProvider)
+        var basedOnRowAttr = type.GetCustomAttribute<BasedOnRowAttribute>();
+        if (basedOnRowAttr != null &&
+            basedOnRowAttr.RowType != null)
         {
-            this.type = type ?? throw new ArgumentNullException(nameof(type));
-            this.serviceProvider = serviceProvider ?? 
-                throw new ArgumentNullException(nameof(serviceProvider));
-            this.propertyProvider = propertyProvider ?? 
-                throw new ArgumentNullException(nameof(PropertyItemsScript.propertyProvider));
-            this.scriptName = scriptName;
-        }
-
-        protected static string CheckName(string name)
-        {
-            if (name.IsEmptyOrNull())
-                throw new ArgumentNullException(nameof(name));
-
-            return name;
-        }
-
-        public TimeSpan Expiration { get; set; }
-        public string GroupKey { get; set; }
-
-        public void Changed()
-        {
-            scriptChanged?.Invoke(this, new EventArgs());
-        }
-
-        public string ScriptName => scriptName;
-
-        public string GetScript()
-        {
-            var items = propertyProvider.GetPropertyItemsFor(type).ToList();
-            if (typeof(ICustomizePropertyItems).IsAssignableFrom(type))
+            var existing = new HashSet<string>(data.Items.Select(x => x.Name));
+            var additional = new HashSet<string>();
+            foreach (var item in data.Items)
             {
-                var instance = ActivatorUtilities.CreateInstance(
-                    serviceProvider, type) as ICustomizePropertyItems;
-                instance.Customize(items);
+                if (!string.IsNullOrEmpty(item.FilteringIdField) &&
+                    !existing.Contains(item.FilteringIdField))
+                    additional.Add(item.FilteringIdField);
             }
 
-            return string.Format(CultureInfo.InvariantCulture, "Q.ScriptData.set({0}, {1});", 
-                scriptName.ToSingleQuoted(), items.ToJson());
+            if (additional.Count > 0)
+            {
+                data.AdditionalItems = propertyProvider.GetPropertyItemsFor(basedOnRowAttr.RowType,
+                    property => additional.Contains(property.Name)).ToList();
+            }
         }
 
-        public void CheckRights(IPermissionService permissions, ITextLocalizer localizer)
-        {
-        }
+        return data;
+    }
 
-        public event EventHandler ScriptChanged
-        {
-            add { scriptChanged += value; }
-            remove { scriptChanged -= value; }
-        }
+    /// <inheritdoc/>
+    public event EventHandler ScriptChanged
+    {
+        add { scriptChanged += value; }
+        remove { scriptChanged -= value; }
     }
 }

@@ -1,21 +1,16 @@
-﻿using Serenity;
-using Serenity.Data;
-using Serenity.Services;
-using System;
-using System.Data;
-using MyRequest = Serenity.Services.ListRequest;
-using MyResponse = Serenity.Services.ListResponse<{{RootNamespace}}{{DotModule}}.{{RowClassName}}>;
-using MyRow = {{RootNamespace}}{{DotModule}}.{{RowClassName}};
+﻿{{USING "Serenity.Services"}}
+{{USING "MyRequest = Serenity.Services.ListRequest"}}
+{{USING "MyResponse = Serenity.Services.ListResponse<" + RowFullName + ">"}}
+{{USING "MyRow = " + RowFullName}}
 
-namespace {{RootNamespace}}{{DotModule}}
+{{NAMESPACE ModuleNamespace}}{{capture block~}}
+public interface I{{ClassName}}ListHandler : IListHandler<MyRow, MyRequest, MyResponse> {}
+
+public class {{ClassName}}ListHandler : ListRequestHandler<MyRow, MyRequest, MyResponse>, I{{ClassName}}ListHandler
 {
-    public interface I{{ClassName}}ListHandler : IListHandler<MyRow, MyRequest, MyResponse> {}
-
-    public class {{ClassName}}ListHandler : ListRequestHandler<MyRow, MyRequest, MyResponse>, I{{ClassName}}ListHandler
+    public {{ClassName}}ListHandler(IRequestContext context)
+            : base(context)
     {
-        public {{ClassName}}ListHandler(IRequestContext context)
-             : base(context)
-        {
-        }
     }
 }
+{{~end}}{{NAMESPACEBLOCK block~}}

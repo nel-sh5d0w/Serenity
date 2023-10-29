@@ -1,184 +1,206 @@
-﻿using Mono.Cecil;
-using Serenity.Reflection;
-using System.IO;
+namespace Serenity.CodeGeneration;
 
-namespace Serenity.CodeGeneration
+public partial class ServerTypingsGenerator : TypingsGeneratorBase
 {
-    public partial class ServerTypingsGenerator : CecilImportGenerator
+    protected override void AddNestedLocalTexts(TypeDefinition type, string prefix)
     {
-        protected override void AddNestedLocalTexts(TypeDefinition type, string prefix)
+        if (TypingsUtils.FindAttr(type.GetAttributes(), "Serenity.ComponentModel", "ScriptSkipAttribute") != null)
+            return;
+
+        foreach (var fi in type.FieldsOf().Where(x =>
+            x.IsPublic() && x.IsStatic && 
+            x.DeclaringType().FullNameOf() == type.FullNameOf() &&
+            x.FieldType().FullNameOf() == "Serenity.LocalText" &&
+            TypingsUtils.FindAttr(x.GetAttributes(), "Serenity.ComponentModel", "ScriptSkipAttribute") == null))
         {
-            if (CecilUtils.FindAttr(type.CustomAttributes, "Serenity.ComponentModel", "ScriptSkipAttribute") != null)
-                return;
-
-            foreach (var fi in type.Fields.Where(x => 
-                x.IsPublic && x.IsStatic && 
-                x.DeclaringType.FullName == type.FullName &&
-                x.FieldType.FullName == "Serenity.LocalText" &&
-                CecilUtils.FindAttr(x.CustomAttributes, "Serenity.ComponentModel", "ScriptSkipAttribute") == null))
-            {
-                localTextKeys.Add(prefix + fi.Name);
-            }
-
-            if (!type.HasNestedTypes)
-                return;
-
-            foreach (var nested in type.NestedTypes)
-            {
-                var name = nested.Name;
-                if (name.EndsWith("_", StringComparison.Ordinal))
-                    name = name[0..^1];
-
-                AddNestedLocalTexts(nested, prefix + name + ".");
-            }
+            localTextKeys.Add(prefix + fi.Name);
         }
 
-        protected void AddRowTexts(TypeDefinition type, string prefix)
-        {
-            foreach (var prop in EnumerateFieldProperties(type))
-                localTextKeys.Add(prefix + prop.Name);
-        }
+#if ISSOURCEGENERATOR
+        foreach (var nested in type.GetTypeMembers())
+#else
+        if (!type.HasNestedTypes)
+            return;
 
-        protected void GenerateTexts()
+        foreach (var nested in type.NestedTypes)
+#endif
         {
-            cw.Indented("namespace ");
-            var ns = RootNamespaces.FirstOrDefault(x => x != "Serenity") ?? "App";
-            sb.Append(ns + ".Texts");
-            cw.InBrace(delegate
+            var name = nested.Name;
+            if (name.EndsWith("_", StringComparison.Ordinal))
+                name = name[0..^1];
+
+            AddNestedLocalTexts(nested, prefix + name + ".");
+        }
+    }
+
+    protected void AddRowTexts(TypeDefinition type, string prefix)
+    {
+        foreach (var prop in EnumerateFieldProperties(type))
+            localTextKeys.Add(prefix + prop.Name);
+    }
+
+    protected void GenerateTexts(bool module)
+    {
+        cw.Indented("namespace ");
+        var ns = RootNamespaces.FirstOrDefault(x => x != "Serenity") ?? "App";
+        sb.Append(ns + ".Texts");
+        cw.InBrace(delegate
+        {
+            Regex filter = null;
+            if (LocalTextFilters.Count > 0)
             {
-                Regex filter = null;
-                if (LocalTextFilters.Count > 0)
+                var fb = new StringBuilder("^(");
+                bool append = false;
+                foreach (string item in LocalTextFilters)
                 {
-                    var fb = new StringBuilder("^(");
-                    bool append = false;
-                    foreach (string item in LocalTextFilters)
+                    if (append)
+                        fb.Append('|');
+                    if (!string.IsNullOrEmpty(item))
                     {
-                        if (append)
-                            fb.Append('|');
-                        if (!string.IsNullOrEmpty(item))
-                        {
-                            if (item[0] == '^' && item[^1] == '$')
-                                fb.Append(item[1..^1]);
-                            else fb.Append(item.Replace(".", "\\.", StringComparison.Ordinal) + ".*");
-                            append = true;
-                        }
+                        if (item[0] == '^' && item[^1] == '$')
+                            fb.Append(item[1..^1]);
+                        else fb.Append(item.Replace(".", "\\."
+#if ISSOURCEGENERATOR
+                            ) + ".*");
+#else
+                            , StringComparison.Ordinal) + ".*");
+#endif
+                        append = true;
                     }
-                    fb.Append(")$");
-                    filter = new Regex(fb.ToString(), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+                }
+                fb.Append(")$");
+                filter = new Regex(fb.ToString(), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            }
+
+            var list = localTextKeys.Where(x =>
+                    !string.IsNullOrWhiteSpace(x) &&
+                    (Web.LocalTextPackages.DefaultSitePackageIncludes.IsMatch(x) ||
+                     (filter == null || filter.IsMatch(x))) &&
+                    x.Split('.').All(p => SqlSyntax.IsValidIdentifier(p)))
+                .ToList();
+
+            list.Sort((i1, i2) => string.CompareOrdinal(i1, i2));
+
+            var jwBuilder = new StringBuilder();
+#if ISSOURCEGENERATOR
+            var jw = new Newtonsoft.Json.JsonTextWriter(
+                new System.IO.StringWriter(jwBuilder))
+#else
+            var jw = new JsonTextWriter(new System.IO.StringWriter(jwBuilder))
+#endif
+            {
+                QuoteName = false,
+                Formatting = Formatting.Indented,
+                Indentation = 4
+            };
+            jw.WriteStartObject();
+            List<string> stack = new();
+            int stackCount = 0;
+            for (int i = 0; i < list.Count; i++)
+            {
+                var key = list[i];
+                var parts = key.Split('.');
+
+                int same = 0;
+
+                if (stackCount > 0)
+                {
+                    while (same < stackCount && same < parts.Length && stack[same] == parts[same])
+                        same++;
+
+                    for (int level = same; level < stackCount; level++)
+                    {
+                        jw.WriteEndObject();
+                        cw.EndBrace();
+                    }
+
+                    stackCount = same;
                 }
 
-                var list = localTextKeys.Where(x => 
-                        !string.IsNullOrWhiteSpace(x) &&
-                        (filter == null || filter.IsMatch(x)) &&
-                        x.Split('.').All(p => SqlSyntax.IsValidIdentifier(p)))
-                    .ToList();
-
-                list.Sort((i1, i2) => string.CompareOrdinal(i1, i2));
-
-                var jwBuilder = new StringBuilder();
-                var jw = new JsonTextWriter(new StringWriter(jwBuilder))
+                for (int level = same; level < parts.Length - 1; level++)
                 {
-                    QuoteName = false
-                };
-                jw.WriteStartObject();
-                List<string> stack = new();
-                int stackCount = 0;
-                for (int i = 0; i < list.Count; i++)
+                    string part = parts[level];
+                    if (stack.Count > level)
+                        stack[level] = part;
+                    else
+                        stack.Add(part);
+                    jw.WritePropertyName(part);
+                    jw.WriteStartObject();
+                    sb.AppendLine();
+                    if (level == 0)
+                        cw.Indented("export declare namespace ");
+                    else
+                        cw.Indented("namespace ");
+                    sb.Append(part);
+                    cw.StartBrace();
+                }
+                stackCount = parts.Length - 1;
+
+                if (same != parts.Length)
                 {
-                    var key = list[i];
-                    var parts = key.Split('.');
+                    string part = parts[^1];
 
-                    int same = 0;
-
-                    if (stackCount > 0)
+                    bool nextStartsWithThis = false;
+                    if (i + 1 < list.Count)
                     {
-                        while (same < stackCount && same < parts.Length && stack[same] == parts[same])
-                            same++;
-
-                        for (int level = same; level < stackCount; level++)
-                        {
-                            jw.WriteEndObject();
-                            cw.EndBrace();
-                        }
-
-                        stackCount = same;
+                        var next = list[i + 1];
+                        if (next.StartsWith(key, StringComparison.Ordinal) &&
+                            next.Length > key.Length &&
+                            next[key.Length] == '.')
+                            nextStartsWithThis = true;
                     }
 
-                    for (int level = same; level < parts.Length - 1; level++)
+                    if (nextStartsWithThis)
                     {
-                        string part = parts[level];
-                        if (stack.Count > level)
-                            stack[level] = part;
+                        stackCount = parts.Length;
+                        if (stack.Count > stackCount - 1)
+                            stack[stackCount - 1] = part;
                         else
                             stack.Add(part);
                         jw.WritePropertyName(part);
                         jw.WriteStartObject();
-                        sb.AppendLine();
-                        if (level == 0)
-                            cw.Indented("declare namespace ");
-                        else
-                            cw.Indented("namespace ");
+                        cw.Indented("namespace ");
                         sb.Append(part);
                         cw.StartBrace();
+                        jw.WritePropertyName("export const __");
+                        jw.WriteValue(1);
+                        cw.IndentedLine("__: string;");
                     }
-                    stackCount = parts.Length - 1;
-
-                    if (same != parts.Length)
+                    else
                     {
-                        string part = parts[^1];
-
-                        bool nextStartsWithThis = false;
-                        if (i + 1 < list.Count)
-                        {
-                            var next = list[i + 1];
-                            if (next.StartsWith(key, StringComparison.Ordinal) &&
-                                next.Length > key.Length &&
-                                next[key.Length] == '.')
-                                nextStartsWithThis = true;
-                        }
-
-                        if (nextStartsWithThis)
-                        {
-                            stackCount = parts.Length;
-                            if (stack.Count > stackCount - 1)
-                                stack[stackCount - 1] = part;
-                            else
-                                stack.Add(part);
-                            jw.WritePropertyName(part);
-                            jw.WriteStartObject();
-                            cw.Indented("namespace ");
-                            sb.Append(part);
-                            cw.StartBrace();
-                            jw.WritePropertyName("export const __");
-                            jw.WriteValue(1);
-                            cw.IndentedLine("__: string;");
-                        }
-                        else
-                        {
-                            jw.WritePropertyName(part);
-                            jw.WriteValue(1);
-                            cw.Indented("export const ");
-                            sb.Append(part);
-                            sb.AppendLine(": string;");
-                        }
+                        cw.Indented("export const ");
+                        sb.Append(part);
+                        sb.AppendLine(": string;");
                     }
                 }
-                for (int i = 0; i < stackCount; i++)
-                {
-                    jw.WriteEndObject();
-                    cw.EndBrace();
-                    sb.AppendLine();
-                }
+            }
+            for (int i = 0; i < stackCount; i++)
+            {
                 jw.WriteEndObject();
+                cw.EndBrace();
+                sb.AppendLine();
+            }
+            jw.WriteEndObject();
 
-                cw.Indented(ns);
+            cw.Indented(ns);
+            if (module)
+            {
+                var proxyTexts = ImportFromQ("proxyTexts");
+                sb.Append($"['Texts'] = {proxyTexts}(Texts, '', ");
+            }
+            else
                 sb.Append(@"['Texts'] = Q.proxyTexts(Texts, '', ");
-                jw.Flush();
-                sb.Append(jwBuilder);
-                sb.AppendLine(");");
-            });
+            jw.Flush();
+            sb.Append(string.Join("\n    ", jwBuilder.ToString().Split('\n')));
+            sb.AppendLine(") as any;");
+        });
 
-            AddFile("Texts.ts");
+        if (module)
+        {
+            sb.AppendLine();
+            sb.AppendLine($"export const Texts = {ns}.Texts;");
         }
+
+        AddFile("Texts.ts", module);
     }
 }

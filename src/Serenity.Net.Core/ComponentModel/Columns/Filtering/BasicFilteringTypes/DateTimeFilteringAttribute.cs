@@ -1,25 +1,29 @@
-﻿namespace Serenity.ComponentModel
+﻿namespace Serenity.ComponentModel;
+
+/// <summary>
+/// Indicates that this field should have date/time type of filtering
+/// </summary>
+public class DateTimeFilteringAttribute : CustomFilteringAttribute
 {
     /// <summary>
-    /// Indicates that this field should have date/time type of filtering
+    /// Filtering type key
     /// </summary>
-    public class DateTimeFilteringAttribute : CustomFilteringAttribute
-    {
-        /// <summary>
-        /// Creates a new DateTimeFilteringAttribute
-        /// </summary>
-        public DateTimeFilteringAttribute()
-            : base("DateTime")
-        {
-        }
+    public const string Key = "DateTime";
 
-        /// <summary>
-        /// Gets/sets optional display format to use for display of filter
-        /// </summary>
-        public string DisplayFormat
-        {
-            get { return GetOption<string>("displayFormat"); }
-            set { SetOption("displayFormat", value); }
-        }
+    /// <summary>
+    /// Creates a new DateTimeFilteringAttribute
+    /// </summary>
+    public DateTimeFilteringAttribute()
+        : base(Key)
+    {
+    }
+
+    /// <summary>
+    /// Gets/sets optional display format to use for display of filter
+    /// </summary>
+    public string? DisplayFormat
+    {
+        get { return GetOption<string>("displayFormat"); }
+        set { SetOption("displayFormat", value); }
     }
 }

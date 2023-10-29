@@ -141,25 +141,12 @@ Task("Restore")
     var exitCode = StartProcess("dotnet", "restore " + dotnetSln);
     if (exitCode > 0)
         throw new Exception("Error while restoring " + dotnetSln);
-        
-    StartProcess("powershell", new ProcessSettings 
-    { 
-        Arguments = "npm install", 
-        WorkingDirectory = System.IO.Path.Combine(src, "Serenity.Scripts") 
-    });
 });
 
 Task("Compile")
     .IsDependentOn("Restore")
     .Does(context => 
 {
-
-    StartProcess("powershell", new ProcessSettings 
-    { 
-        Arguments = @"npx tsc -p ..\Serenity.Net.CodeGenerator\Resource\tsconfig.json", 
-        WorkingDirectory = System.IO.Path.Combine(src, "Serenity.Scripts") 
-    });
-               
     writeHeader("Building Serenity.Net.sln");
     MSBuild(System.IO.Path.Combine(src, "Serenity.Net.sln"), s => {
         s.SetConfiguration(configuration);
@@ -187,7 +174,7 @@ Task("Test")
         StartProcess("powershell", new ProcessSettings 
         { 
             Arguments = "npx jest", 
-            WorkingDirectory = System.IO.Path.Combine(src, "Serenity.Scripts") 
+            WorkingDirectory = System.IO.Path.Combine(root, "packages", "corelib") 
         });
 
 });
@@ -221,6 +208,7 @@ Task("Pack")
     myPack("Serenity.Net.Web", null, null);
     myPack("Serenity.Scripts", null, null);
     myPack("Serenity.Net.CodeGenerator", "sergen", null);
+    myPack("Serenity.Assets", null, null);
     
     fixNugetCache();
 });
@@ -232,19 +220,4 @@ Task("Push")
         myPush();
     });
  
-Task("Assets-Pack")
-    .IsDependentOn("Clean")
-    .Does(() =>
-    {
-        myPack("Serenity.Assets", null, null);
-        fixNugetCache();
-    });
-
-Task("Assets-Push")
-    .IsDependentOn("Assets-Pack")
-    .Does(() =>
-    {
-        myPush();
-    });
-
 RunTarget(target);

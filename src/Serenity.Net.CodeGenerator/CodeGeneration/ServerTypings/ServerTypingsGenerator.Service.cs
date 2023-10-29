@@ -1,113 +1,128 @@
-﻿using Mono.Cecil;
+﻿namespace Serenity.CodeGeneration;
 
-namespace Serenity.CodeGeneration
+public partial class ServerTypingsGenerator : TypingsGeneratorBase
 {
-    public partial class ServerTypingsGenerator : CecilImportGenerator
+    private void GenerateService(TypeDefinition type, string identifier, bool module)
     {
-        private void GenerateService(TypeDefinition type)
-        {
-            var codeNamespace = GetNamespace(type);
+        var codeNamespace = GetNamespace(type);
 
-            cw.Indented("export namespace ");
-            var identifier = GetControllerIdentifier(type);
-            fileIdentifier = identifier;
-            sb.Append(identifier);
-            generatedTypes.Add((codeNamespace.IsEmptyOrNull() ? "" : codeNamespace + ".") + identifier);
+        cw.Indented("export namespace ");
+        sb.Append(identifier);
+        RegisterGeneratedType(codeNamespace, identifier, module, typeOnly: false);
+
+        cw.InBrace(delegate
+        {
+            var serviceUrl = GetServiceUrlFromRoute(type);
+            serviceUrl ??= GetNamespace(type).Replace(".", "/", StringComparison.Ordinal);
+
+            cw.Indented("export const baseUrl = '");
+            sb.Append(serviceUrl);
+            sb.AppendLine("';");
+            sb.AppendLine();
+
+
+            var methodNames = new List<string>();
+            foreach (var method in type.MethodsOf())
+            {
+                if (!method.IsPublic() || method.IsStatic || method.IsAbstract)
+                    continue;
+
+                if (methodNames.Contains(method.Name))
+                    continue;
+
+                if (!IsPublicServiceMethod(method, out TypeReference requestType, out TypeReference responseType, out string requestParam))
+                    continue;
+
+                methodNames.Add(method.Name);
+
+                cw.Indented("export declare function ");
+                sb.Append(method.Name);
+
+                sb.Append("(request: ");
+                if (requestType == null)
+                {
+                    if (module) 
+                    {
+                        var serviceRequest = ImportFromQ("ServiceRequest");
+                        sb.Append(serviceRequest);
+                    }
+                    else
+                        sb.Append(ShortenFullName("Serenity", "ServiceRequest", codeNamespace, module, "Serenity.Net.Core"));
+                }
+                else
+                    HandleMemberType(requestType, codeNamespace, module);
+
+                sb.Append(", onSuccess?: (response: ");
+                HandleMemberType(responseType, codeNamespace, module);
+                var serviceOptions = module ? ImportFromQ("ServiceOptions") : "Q.ServiceOptions";
+
+                sb.AppendLine($") => void, opt?: {serviceOptions}<any>): JQueryXHR;");
+            }
+
+            sb.AppendLine();
+            cw.Indented($"export {(module ? "const" : "declare const enum")} ");
+            sb.Append("Methods");
+            if (module)
+                sb.Append(" =");
 
             cw.InBrace(delegate
             {
-                var serviceUrl = GetServiceUrlFromRoute(type);
-                if (serviceUrl == null)
-                    serviceUrl = GetNamespace(type).Replace(".", "/", StringComparison.Ordinal);
-
-                cw.Indented("export const baseUrl = '");
-                sb.Append(serviceUrl);
-                sb.AppendLine("';");
-                sb.AppendLine();
-
-
-                var methodNames = new List<string>();
-                foreach (var method in type.Methods)
+                var inserted = 0;
+                foreach (var methodName in methodNames)
                 {
-                    if (!method.IsPublic || method.IsStatic || method.IsAbstract)
-                        continue;
+                    if (inserted > 0)
+                        sb.AppendLine(",");
 
-                    if (methodNames.Contains(method.Name))
-                        continue;
+                    cw.Indented(methodName);
+                    sb.Append(module ? ": \"" : " = \"");
+                    sb.Append(serviceUrl);
+                    sb.Append('/');
+                    sb.Append(methodName);
+                    sb.Append('"');
 
-                    if (!IsPublicServiceMethod(method, out TypeReference requestType, out TypeReference responseType, out string requestParam))
-                        continue;
-
-                    methodNames.Add(method.Name);
-
-                    cw.Indented("export declare function ");
-                    sb.Append(method.Name);
-
-                    sb.Append("(request: ");
-                    if (requestType == null)
-                        sb.Append(ShortenFullName(new ExternalType { Name = "ServiceRequest", Namespace = "Serenity" }, codeNamespace));
-                    else
-                        HandleMemberType(requestType, codeNamespace);
-
-                    sb.Append(", onSuccess?: (response: ");
-                    HandleMemberType(responseType, codeNamespace);
-                    sb.AppendLine(") => void, opt?: Q.ServiceOptions<any>): JQueryXHR;");
+                    inserted++;
                 }
 
                 sb.AppendLine();
-                cw.Indented("export declare const enum ");
-                sb.Append("Methods");
+            }, endLine: !module);
 
-                cw.InBrace(delegate
+            if (module)
+                sb.AppendLine(" as const;");
+
+            sb.AppendLine();
+
+            if (methodNames.Count > 0)
+            {
+                cw.IndentedLine("[");
+                int i = 0;
+                foreach (var methodName in methodNames)
                 {
-                    var inserted = 0;
-                    foreach (var methodName in methodNames)
-                    {
-                        if (inserted > 0)
-                            sb.AppendLine(",");
+                    if (i++ > 0)
+                        sb.AppendLine(", ");
 
-                        cw.Indented(methodName);
-                        sb.Append(" = \"");
-                        sb.Append(serviceUrl);
-                        sb.Append('/');
-                        sb.Append(methodName);
-                        sb.Append('"');
-
-                        inserted++;
-                    }
-
+                    cw.Indented("    '");
+                    sb.Append(methodName);
+                    sb.Append('\'');
+                }
+                if (i > 0)
                     sb.AppendLine();
-                });
-
-                sb.AppendLine();
-
-                if (methodNames.Count > 0)
+                cw.IndentedLine("].forEach(x => {");
+                cw.Block(delegate ()
                 {
-                    cw.IndentedLine("[");
-                    int i = 0;
-                    foreach (var methodName in methodNames)
+                    cw.Indented("(<any>");
+                    sb.Append(identifier);
+                    sb.AppendLine(")[x] = function (r, s, o) {");
+                    if (module)
                     {
-                        if (i++ > 0)
-                            sb.AppendLine(", ");
-
-                        cw.Indented("    '");
-                        sb.Append(methodName);
-                        sb.Append('\'');
+                        var serviceRequest = ImportFromQ("serviceRequest");
+                        cw.IndentedLine($"    return {serviceRequest}(baseUrl + '/' + x, r, s, o);");
                     }
-                    if (i > 0)
-                        sb.AppendLine();
-                    cw.IndentedLine("].forEach(x => {");
-                    cw.Block(delegate ()
-                    {
-                        cw.Indented("(<any>");
-                        sb.Append(identifier);
-                        sb.AppendLine(")[x] = function (r, s, o) {");
+                    else
                         cw.IndentedLine("    return Q.serviceRequest(baseUrl + '/' + x, r, s, o);");
-                        cw.IndentedLine("};");
-                    });
-                    cw.IndentedLine("});");
-                }
-            });
-        }
+                    cw.IndentedLine("};");
+                });
+                cw.IndentedLine("});");
+            }
+        });
     }
 }

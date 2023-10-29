@@ -1,6 +1,5 @@
-/*! jQuery UI - v1.12.1 - 2017-11-01
+/*! jQuery UI - v1.12.1 - Serenity custom slim build
 * http://jqueryui.com
-* Includes: widget.js, position.js, data.js, disable-selection.js, focusable.js, form-reset-mixin.js, keycode.js, labels.js, scroll-parent.js, tabbable.js, unique-id.js, widgets/draggable.js, widgets/resizable.js, widgets/sortable.js, widgets/autocomplete.js, widgets/button.js, widgets/checkboxradio.js, widgets/controlgroup.js, widgets/datepicker.js, widgets/dialog.js, widgets/menu.js, widgets/mouse.js, widgets/progressbar.js, widgets/tabs.js, effect.js, effects/effect-shake.js
 * Copyright jQuery Foundation and other contributors; Licensed MIT */
 
 (function( factory ) {
@@ -17,26 +16,7 @@
 
 $.ui = $.ui || {};
 
-var version = $.ui.version = "1.12.1";
-
-
-/*!
- * jQuery UI Widget 1.12.1
- * http://jqueryui.com
- *
- * Copyright jQuery Foundation and other contributors
- * Released under the MIT license.
- * http://jquery.org/license
- */
-
-//>>label: Widget
-//>>group: Core
-//>>description: Provides a factory for creating stateful widgets with a common API.
-//>>docs: http://api.jqueryui.com/jQuery.widget/
-//>>demos: http://jqueryui.com/widget/
-
-
-
+$.ui.version = "1.12.1";
 var widgetUuid = 0;
 var widgetSlice = Array.prototype.slice;
 
@@ -743,24 +723,7 @@ $.each( { show: "fadeIn", hide: "fadeOut" }, function( method, defaultEffect ) {
 var widget = $.widget;
 
 
-/*!
- * jQuery UI Position 1.12.1
- * http://jqueryui.com
- *
- * Copyright jQuery Foundation and other contributors
- * Released under the MIT license.
- * http://jquery.org/license
- *
- * http://api.jqueryui.com/position/
- */
-
-//>>label: Position
-//>>group: Core
-//>>description: Positions elements relative to other elements.
-//>>docs: http://api.jqueryui.com/position/
-//>>demos: http://jqueryui.com/position/
-
-
+/* UI Position */
 ( function() {
 var cachedScrollbarWidth,
 	max = Math.max,
@@ -1231,22 +1194,8 @@ $.ui.position = {
 var position = $.ui.position;
 
 
-/*!
- * jQuery UI :data 1.12.1
- * http://jqueryui.com
- *
- * Copyright jQuery Foundation and other contributors
- * Released under the MIT license.
- * http://jquery.org/license
- */
-
-//>>label: :data Selector
-//>>group: Core
-//>>description: Selects elements which have data stored under the specified key.
-//>>docs: http://api.jqueryui.com/data-selector/
-
-
-var data = $.extend( $.expr[ ":" ], {
+/* UI :data */
+$.extend( $.expr[ ":" ], {
 	data: $.expr.createPseudo ?
 		$.expr.createPseudo( function( dataName ) {
 			return function( elem ) {
@@ -1260,24 +1209,8 @@ var data = $.extend( $.expr[ ":" ], {
 		}
 } );
 
-/*!
- * jQuery UI Disable Selection 1.12.1
- * http://jqueryui.com
- *
- * Copyright jQuery Foundation and other contributors
- * Released under the MIT license.
- * http://jquery.org/license
- */
-
-//>>label: disableSelection
-//>>group: Core
-//>>description: Disable selection of text content within the set of matched elements.
-//>>docs: http://api.jqueryui.com/disableSelection/
-
-// This file is deprecated
-
-
-var disableSelection = $.fn.extend( {
+/* UI Disable Selection */
+$.fn.extend( {
 	disableSelection: ( function() {
 		var eventType = "onselectstart" in document.createElement( "div" ) ?
 			"selectstart" :
@@ -1296,23 +1229,7 @@ var disableSelection = $.fn.extend( {
 } );
 
 
-/*!
- * jQuery UI Focusable 1.12.1
- * http://jqueryui.com
- *
- * Copyright jQuery Foundation and other contributors
- * Released under the MIT license.
- * http://jquery.org/license
- */
-
-//>>label: :focusable Selector
-//>>group: Core
-//>>description: Selects elements which can be focused.
-//>>docs: http://api.jqueryui.com/focusable-selector/
-
-
-
-// Selectors
+/* UI Focusable */
 $.ui.focusable = function( element, hasTabindex ) {
 	var map, mapName, img, focusableIfVisible, fieldset,
 		nodeName = element.nodeName.toLowerCase();
@@ -1347,19 +1264,8 @@ $.ui.focusable = function( element, hasTabindex ) {
 		focusableIfVisible = hasTabindex;
 	}
 
-	return focusableIfVisible && $( element ).is( ":visible" ) && visible( $( element ) );
+	return focusableIfVisible && $( element ).is( ":visible" ) && $( element ).css('visibility') !== 'hidden';
 };
-
-// Support: IE 8 only
-// IE 8 doesn't resolve inherit to visible/hidden for computed values
-function visible( element ) {
-	var visibility = element.css( "visibility" );
-	while ( visibility === "inherit" ) {
-		element = element.parent();
-		visibility = element.css( "visibility" );
-	}
-	return visibility !== "hidden";
-}
 
 $.extend( $.expr[ ":" ], {
 	focusable: function( element ) {
@@ -1367,98 +1273,15 @@ $.extend( $.expr[ ":" ], {
 	}
 } );
 
-var focusable = $.ui.focusable;
-
-
-
-
 // Support: IE8 Only
 // IE8 does not support the form attribute and when it is supplied. It overwrites the form prop
 // with a string, so we need to find the proper form.
-var form = $.fn.form = function() {
+$.fn.form = function() {
 	return typeof this[ 0 ].form === "string" ? this.closest( "form" ) : $( this[ 0 ].form );
 };
 
-
-/*!
- * jQuery UI Form Reset Mixin 1.12.1
- * http://jqueryui.com
- *
- * Copyright jQuery Foundation and other contributors
- * Released under the MIT license.
- * http://jquery.org/license
- */
-
-//>>label: Form Reset Mixin
-//>>group: Core
-//>>description: Refresh input widgets when their form is reset
-//>>docs: http://api.jqueryui.com/form-reset-mixin/
-
-
-
-var formResetMixin = $.ui.formResetMixin = {
-	_formResetHandler: function() {
-		var form = $( this );
-
-		// Wait for the form reset to actually happen before refreshing
-		setTimeout( function() {
-			var instances = form.data( "ui-form-reset-instances" );
-			$.each( instances, function() {
-				this.refresh();
-			} );
-		} );
-	},
-
-	_bindFormResetHandler: function() {
-		this.form = this.element.form();
-		if ( !this.form.length ) {
-			return;
-		}
-
-		var instances = this.form.data( "ui-form-reset-instances" ) || [];
-		if ( !instances.length ) {
-
-			// We don't use _on() here because we use a single event handler per form
-			this.form.on( "reset.ui-form-reset", this._formResetHandler );
-		}
-		instances.push( this );
-		this.form.data( "ui-form-reset-instances", instances );
-	},
-
-	_unbindFormResetHandler: function() {
-		if ( !this.form.length ) {
-			return;
-		}
-
-		var instances = this.form.data( "ui-form-reset-instances" );
-		instances.splice( $.inArray( this, instances ), 1 );
-		if ( instances.length ) {
-			this.form.data( "ui-form-reset-instances", instances );
-		} else {
-			this.form
-				.removeData( "ui-form-reset-instances" )
-				.off( "reset.ui-form-reset" );
-		}
-	}
-};
-
-
-/*!
- * jQuery UI Keycode 1.12.1
- * http://jqueryui.com
- *
- * Copyright jQuery Foundation and other contributors
- * Released under the MIT license.
- * http://jquery.org/license
- */
-
-//>>label: Keycode
-//>>group: Core
-//>>description: Provide keycodes as keynames
-//>>docs: http://api.jqueryui.com/jQuery.ui.keyCode/
-
-
-var keycode = $.ui.keyCode = {
+/* UI Keycode */
+$.ui.keyCode = {
 	BACKSPACE: 8,
 	COMMA: 188,
 	DELETE: 46,
@@ -1478,10 +1301,8 @@ var keycode = $.ui.keyCode = {
 };
 
 
-
-
 // Internal use only
-var escapeSelector = $.ui.escapeSelector = ( function() {
+$.ui.escapeSelector = ( function() {
 	var selectorEscape = /([!"#$%&'()*+,./:;<=>?@[\]^`{|}~])/g;
 	return function( selector ) {
 		return selector.replace( selectorEscape, "\\$1" );
@@ -1489,75 +1310,8 @@ var escapeSelector = $.ui.escapeSelector = ( function() {
 } )();
 
 
-/*!
- * jQuery UI Labels 1.12.1
- * http://jqueryui.com
- *
- * Copyright jQuery Foundation and other contributors
- * Released under the MIT license.
- * http://jquery.org/license
- */
-
-//>>label: labels
-//>>group: Core
-//>>description: Find all the labels associated with a given input
-//>>docs: http://api.jqueryui.com/labels/
-
-
-
-var labels = $.fn.labels = function() {
-	var ancestor, selector, id, labels, ancestors;
-
-	// Check control.labels first
-	if ( this[ 0 ].labels && this[ 0 ].labels.length ) {
-		return this.pushStack( this[ 0 ].labels );
-	}
-
-	// Support: IE <= 11, FF <= 37, Android <= 2.3 only
-	// Above browsers do not support control.labels. Everything below is to support them
-	// as well as document fragments. control.labels does not work on document fragments
-	labels = this.eq( 0 ).parents( "label" );
-
-	// Look for the label based on the id
-	id = this.attr( "id" );
-	if ( id ) {
-
-		// We don't search against the document in case the element
-		// is disconnected from the DOM
-		ancestor = this.eq( 0 ).parents().last();
-
-		// Get a full set of top level ancestors
-		ancestors = ancestor.add( ancestor.length ? ancestor.siblings() : this.siblings() );
-
-		// Create a selector for the label based on the id
-		selector = "label[for='" + $.ui.escapeSelector( id ) + "']";
-
-		labels = labels.add( ancestors.find( selector ).addBack( selector ) );
-
-	}
-
-	// Return whatever we have found for labels
-	return this.pushStack( labels );
-};
-
-
-/*!
- * jQuery UI Scroll Parent 1.12.1
- * http://jqueryui.com
- *
- * Copyright jQuery Foundation and other contributors
- * Released under the MIT license.
- * http://jquery.org/license
- */
-
-//>>label: scrollParent
-//>>group: Core
-//>>description: Get the closest ancestor element that is scrollable.
-//>>docs: http://api.jqueryui.com/scrollParent/
-
-
-
-var scrollParent = $.fn.scrollParent = function( includeHidden ) {
+/* UI scrollParent */
+$.fn.scrollParent = function( includeHidden ) {
 	var position = this.css( "position" ),
 		excludeStaticParent = position === "absolute",
 		overflowRegex = includeHidden ? /(auto|scroll|hidden)/ : /(auto|scroll)/,
@@ -1576,23 +1330,8 @@ var scrollParent = $.fn.scrollParent = function( includeHidden ) {
 };
 
 
-/*!
- * jQuery UI Tabbable 1.12.1
- * http://jqueryui.com
- *
- * Copyright jQuery Foundation and other contributors
- * Released under the MIT license.
- * http://jquery.org/license
- */
-
-//>>label: :tabbable Selector
-//>>group: Core
-//>>description: Selects elements which can be tabbed to.
-//>>docs: http://api.jqueryui.com/tabbable-selector/
-
-
-
-var tabbable = $.extend( $.expr[ ":" ], {
+/* UI Tabbable Selector */
+$.extend( $.expr[ ":" ], {
 	tabbable: function( element ) {
 		var tabIndex = $.attr( element, "tabindex" ),
 			hasTabindex = tabIndex != null;
@@ -1601,23 +1340,8 @@ var tabbable = $.extend( $.expr[ ":" ], {
 } );
 
 
-/*!
- * jQuery UI Unique ID 1.12.1
- * http://jqueryui.com
- *
- * Copyright jQuery Foundation and other contributors
- * Released under the MIT license.
- * http://jquery.org/license
- */
-
-//>>label: uniqueId
-//>>group: Core
-//>>description: Functions to generate and remove uniqueId's
-//>>docs: http://api.jqueryui.com/uniqueId/
-
-
-
-var uniqueId = $.fn.extend( {
+/* UI Unique ID */
+$.fn.extend( {
 	uniqueId: ( function() {
 		var uuid = 0;
 
@@ -1642,31 +1366,15 @@ var uniqueId = $.fn.extend( {
 
 
 
-// This file is deprecated
-var ie = $.ui.ie = !!/msie [\w.]+/.exec( navigator.userAgent.toLowerCase() );
+var ie = $.ui.ie = false;
 
-/*!
- * jQuery UI Mouse 1.12.1
- * http://jqueryui.com
- *
- * Copyright jQuery Foundation and other contributors
- * Released under the MIT license.
- * http://jquery.org/license
- */
-
-//>>label: Mouse
-//>>group: Widgets
-//>>description: Abstracts mouse-based interactions to assist in creating certain widgets.
-//>>docs: http://api.jqueryui.com/mouse/
-
-
-
+/* UI Mouse */
 var mouseHandled = false;
 $( document ).on( "mouseup", function() {
 	mouseHandled = false;
 } );
 
-var widgetsMouse = $.widget( "ui.mouse", {
+$.widget( "ui.mouse", {
 	version: "1.12.1",
 	options: {
 		cancel: "input, textarea, button, select, option",
@@ -1855,9 +1563,6 @@ var widgetsMouse = $.widget( "ui.mouse", {
 	_mouseCapture: function( /* event */ ) { return true; }
 } );
 
-
-
-
 // $.ui.plugin is deprecated. Use $.widget() extensions instead.
 var plugin = $.ui.plugin = {
 	add: function( module, option, set ) {
@@ -1888,10 +1593,7 @@ var plugin = $.ui.plugin = {
 		}
 	}
 };
-
-
-
-var safeActiveElement = $.ui.safeActiveElement = function( document ) {
+$.ui.safeActiveElement = function( document ) {
 	var activeElement;
 
 	// Support: IE 9 only
@@ -1919,9 +1621,7 @@ var safeActiveElement = $.ui.safeActiveElement = function( document ) {
 	return activeElement;
 };
 
-
-
-var safeBlur = $.ui.safeBlur = function( element ) {
+$.ui.safeBlur = function( element ) {
 
 	// Support: IE9 - 10 only
 	// If the <body> is blurred, IE will switch windows, see #9420
@@ -1931,24 +1631,7 @@ var safeBlur = $.ui.safeBlur = function( element ) {
 };
 
 
-/*!
- * jQuery UI Draggable 1.12.1
- * http://jqueryui.com
- *
- * Copyright jQuery Foundation and other contributors
- * Released under the MIT license.
- * http://jquery.org/license
- */
-
-//>>label: Draggable
-//>>group: Interactions
-//>>description: Enables dragging functionality for any element.
-//>>docs: http://api.jqueryui.com/draggable/
-//>>demos: http://jqueryui.com/draggable/
-//>>css.structure: ../../themes/base/draggable.css
-
-
-
+/* UI Draggable */
 $.widget( "ui.draggable", $.ui.mouse, {
 	version: "1.12.1",
 	widgetEventPrefix: "drag",
@@ -3158,29 +2841,7 @@ $.ui.plugin.add( "draggable", "zIndex", {
 	}
 } );
 
-var widgetsDraggable = $.ui.draggable;
-
-
-/*!
- * jQuery UI Resizable 1.12.1
- * http://jqueryui.com
- *
- * Copyright jQuery Foundation and other contributors
- * Released under the MIT license.
- * http://jquery.org/license
- */
-
-//>>label: Resizable
-//>>group: Interactions
-//>>description: Enables resize functionality for any element.
-//>>docs: http://api.jqueryui.com/resizable/
-//>>demos: http://jqueryui.com/resizable/
-//>>css.structure: ../../themes/base/core.css
-//>>css.structure: ../../themes/base/resizable.css
-//>>css.theme: ../../themes/base/theme.css
-
-
-
+/* UI Resizable */
 $.widget( "ui.resizable", $.ui.mouse, {
 	version: "1.12.1",
 	widgetEventPrefix: "resize",
@@ -3934,10 +3595,6 @@ $.widget( "ui.resizable", $.ui.mouse, {
 
 } );
 
-/*
- * Resizable Extensions
- */
-
 $.ui.plugin.add( "resizable", "animate", {
 
 	stop: function( event ) {
@@ -4235,15 +3892,6 @@ $.ui.plugin.add( "resizable", "ghost", {
 		} );
 
 		that._addClass( that.ghost, "ui-resizable-ghost" );
-
-		// DEPRECATED
-		// TODO: remove after 1.12
-		if ( $.uiBackCompat !== false && typeof that.options.ghost === "string" ) {
-
-			// Ghost option
-			that.ghost.addClass( this.options.ghost );
-		}
-
 		that.ghost.appendTo( that.helper );
 
 	},
@@ -4342,28 +3990,8 @@ $.ui.plugin.add( "resizable", "grid", {
 
 } );
 
-var widgetsResizable = $.ui.resizable;
-
-
-/*!
- * jQuery UI Sortable 1.12.1
- * http://jqueryui.com
- *
- * Copyright jQuery Foundation and other contributors
- * Released under the MIT license.
- * http://jquery.org/license
- */
-
-//>>label: Sortable
-//>>group: Interactions
-//>>description: Enables items in a list to be sorted using the mouse.
-//>>docs: http://api.jqueryui.com/sortable/
-//>>demos: http://jqueryui.com/sortable/
-//>>css.structure: ../../themes/base/sortable.css
-
-
-
-var widgetsSortable = $.widget( "ui.sortable", $.ui.mouse, {
+/* UI Sortable */
+$.widget( "ui.sortable", $.ui.mouse, {
 	version: "1.12.1",
 	widgetEventPrefix: "sort",
 	ready: false,
@@ -5881,27 +5509,8 @@ var widgetsSortable = $.widget( "ui.sortable", $.ui.mouse, {
 } );
 
 
-/*!
- * jQuery UI Menu 1.12.1
- * http://jqueryui.com
- *
- * Copyright jQuery Foundation and other contributors
- * Released under the MIT license.
- * http://jquery.org/license
- */
-
-//>>label: Menu
-//>>group: Widgets
-//>>description: Creates nestable menus.
-//>>docs: http://api.jqueryui.com/menu/
-//>>demos: http://jqueryui.com/menu/
-//>>css.structure: ../../themes/base/core.css
-//>>css.structure: ../../themes/base/menu.css
-//>>css.theme: ../../themes/base/theme.css
-
-
-
-var widgetsMenu = $.widget( "ui.menu", {
+/* UI Menu */
+$.widget( "ui.menu", {
 	version: "1.12.1",
 	defaultElement: "<ul>",
 	delay: 300,
@@ -6536,26 +6145,7 @@ var widgetsMenu = $.widget( "ui.menu", {
 } );
 
 
-/*!
- * jQuery UI Autocomplete 1.12.1
- * http://jqueryui.com
- *
- * Copyright jQuery Foundation and other contributors
- * Released under the MIT license.
- * http://jquery.org/license
- */
-
-//>>label: Autocomplete
-//>>group: Widgets
-//>>description: Lists suggested words as the user is typing.
-//>>docs: http://api.jqueryui.com/autocomplete/
-//>>demos: http://jqueryui.com/autocomplete/
-//>>css.structure: ../../themes/base/core.css
-//>>css.structure: ../../themes/base/autocomplete.css
-//>>css.theme: ../../themes/base/theme.css
-
-
-
+/* UI Autocomplete */
 $.widget( "ui.autocomplete", {
 	version: "1.12.1",
 	defaultElement: "<input>",
@@ -7197,584 +6787,7 @@ $.widget( "ui.autocomplete", $.ui.autocomplete, {
 	}
 } );
 
-var widgetsAutocomplete = $.ui.autocomplete;
-
-
-/*!
- * jQuery UI Controlgroup 1.12.1
- * http://jqueryui.com
- *
- * Copyright jQuery Foundation and other contributors
- * Released under the MIT license.
- * http://jquery.org/license
- */
-
-//>>label: Controlgroup
-//>>group: Widgets
-//>>description: Visually groups form control widgets
-//>>docs: http://api.jqueryui.com/controlgroup/
-//>>demos: http://jqueryui.com/controlgroup/
-//>>css.structure: ../../themes/base/core.css
-//>>css.structure: ../../themes/base/controlgroup.css
-//>>css.theme: ../../themes/base/theme.css
-
-
-var controlgroupCornerRegex = /ui-corner-([a-z]){2,6}/g;
-
-var widgetsControlgroup = $.widget( "ui.controlgroup", {
-	version: "1.12.1",
-	defaultElement: "<div>",
-	options: {
-		direction: "horizontal",
-		disabled: null,
-		onlyVisible: true,
-		items: {
-			"button": "input[type=button], input[type=submit], input[type=reset], button, a",
-			"controlgroupLabel": ".ui-controlgroup-label",
-			"checkboxradio": "input[type='checkbox'], input[type='radio']",
-			"selectmenu": "select",
-			"spinner": ".ui-spinner-input"
-		}
-	},
-
-	_create: function() {
-		this._enhance();
-	},
-
-	// To support the enhanced option in jQuery Mobile, we isolate DOM manipulation
-	_enhance: function() {
-		this.element.attr( "role", "toolbar" );
-		this.refresh();
-	},
-
-	_destroy: function() {
-		this._callChildMethod( "destroy" );
-		this.childWidgets.removeData( "ui-controlgroup-data" );
-		this.element.removeAttr( "role" );
-		if ( this.options.items.controlgroupLabel ) {
-			this.element
-				.find( this.options.items.controlgroupLabel )
-				.find( ".ui-controlgroup-label-contents" )
-				.contents().unwrap();
-		}
-	},
-
-	_initWidgets: function() {
-		var that = this,
-			childWidgets = [];
-
-		// First we iterate over each of the items options
-		$.each( this.options.items, function( widget, selector ) {
-			var labels;
-			var options = {};
-
-			// Make sure the widget has a selector set
-			if ( !selector ) {
-				return;
-			}
-
-			if ( widget === "controlgroupLabel" ) {
-				labels = that.element.find( selector );
-				labels.each( function() {
-					var element = $( this );
-
-					if ( element.children( ".ui-controlgroup-label-contents" ).length ) {
-						return;
-					}
-					element.contents()
-						.wrapAll( "<span class='ui-controlgroup-label-contents'></span>" );
-				} );
-				that._addClass( labels, null, "ui-widget ui-widget-content ui-state-default" );
-				childWidgets = childWidgets.concat( labels.get() );
-				return;
-			}
-
-			// Make sure the widget actually exists
-			if ( !$.fn[ widget ] ) {
-				return;
-			}
-
-			// We assume everything is in the middle to start because we can't determine
-			// first / last elements until all enhancments are done.
-			if ( that[ "_" + widget + "Options" ] ) {
-				options = that[ "_" + widget + "Options" ]( "middle" );
-			} else {
-				options = { classes: {} };
-			}
-
-			// Find instances of this widget inside controlgroup and init them
-			that.element
-				.find( selector )
-				.each( function() {
-					var element = $( this );
-					var instance = element[ widget ]( "instance" );
-
-					// We need to clone the default options for this type of widget to avoid
-					// polluting the variable options which has a wider scope than a single widget.
-					var instanceOptions = $.widget.extend( {}, options );
-
-					// If the button is the child of a spinner ignore it
-					// TODO: Find a more generic solution
-					if ( widget === "button" && element.parent( ".ui-spinner" ).length ) {
-						return;
-					}
-
-					// Create the widget if it doesn't exist
-					if ( !instance ) {
-						instance = element[ widget ]()[ widget ]( "instance" );
-					}
-					if ( instance ) {
-						instanceOptions.classes =
-							that._resolveClassesValues( instanceOptions.classes, instance );
-					}
-					element[ widget ]( instanceOptions );
-
-					// Store an instance of the controlgroup to be able to reference
-					// from the outermost element for changing options and refresh
-					var widgetElement = element[ widget ]( "widget" );
-					$.data( widgetElement[ 0 ], "ui-controlgroup-data",
-						instance ? instance : element[ widget ]( "instance" ) );
-
-					childWidgets.push( widgetElement[ 0 ] );
-				} );
-		} );
-
-		this.childWidgets = $( $.unique( childWidgets ) );
-		this._addClass( this.childWidgets, "ui-controlgroup-item" );
-	},
-
-	_callChildMethod: function( method ) {
-		this.childWidgets.each( function() {
-			var element = $( this ),
-				data = element.data( "ui-controlgroup-data" );
-			if ( data && data[ method ] ) {
-				data[ method ]();
-			}
-		} );
-	},
-
-	_updateCornerClass: function( element, position ) {
-		var remove = "ui-corner-top ui-corner-bottom ui-corner-left ui-corner-right ui-corner-all";
-		var add = this._buildSimpleOptions( position, "label" ).classes.label;
-
-		this._removeClass( element, null, remove );
-		this._addClass( element, null, add );
-	},
-
-	_buildSimpleOptions: function( position, key ) {
-		var direction = this.options.direction === "vertical";
-		var result = {
-			classes: {}
-		};
-		result.classes[ key ] = {
-			"middle": "",
-			"first": "ui-corner-" + ( direction ? "top" : "left" ),
-			"last": "ui-corner-" + ( direction ? "bottom" : "right" ),
-			"only": "ui-corner-all"
-		}[ position ];
-
-		return result;
-	},
-
-	_spinnerOptions: function( position ) {
-		var options = this._buildSimpleOptions( position, "ui-spinner" );
-
-		options.classes[ "ui-spinner-up" ] = "";
-		options.classes[ "ui-spinner-down" ] = "";
-
-		return options;
-	},
-
-	_buttonOptions: function( position ) {
-		return this._buildSimpleOptions( position, "ui-button" );
-	},
-
-	_checkboxradioOptions: function( position ) {
-		return this._buildSimpleOptions( position, "ui-checkboxradio-label" );
-	},
-
-	_selectmenuOptions: function( position ) {
-		var direction = this.options.direction === "vertical";
-		return {
-			width: direction ? "auto" : false,
-			classes: {
-				middle: {
-					"ui-selectmenu-button-open": "",
-					"ui-selectmenu-button-closed": ""
-				},
-				first: {
-					"ui-selectmenu-button-open": "ui-corner-" + ( direction ? "top" : "tl" ),
-					"ui-selectmenu-button-closed": "ui-corner-" + ( direction ? "top" : "left" )
-				},
-				last: {
-					"ui-selectmenu-button-open": direction ? "" : "ui-corner-tr",
-					"ui-selectmenu-button-closed": "ui-corner-" + ( direction ? "bottom" : "right" )
-				},
-				only: {
-					"ui-selectmenu-button-open": "ui-corner-top",
-					"ui-selectmenu-button-closed": "ui-corner-all"
-				}
-
-			}[ position ]
-		};
-	},
-
-	_resolveClassesValues: function( classes, instance ) {
-		var result = {};
-		$.each( classes, function( key ) {
-			var current = instance.options.classes[ key ] || "";
-			current = $.trim( current.replace( controlgroupCornerRegex, "" ) );
-			result[ key ] = ( current + " " + classes[ key ] ).replace( /\s+/g, " " );
-		} );
-		return result;
-	},
-
-	_setOption: function( key, value ) {
-		if ( key === "direction" ) {
-			this._removeClass( "ui-controlgroup-" + this.options.direction );
-		}
-
-		this._super( key, value );
-		if ( key === "disabled" ) {
-			this._callChildMethod( value ? "disable" : "enable" );
-			return;
-		}
-
-		this.refresh();
-	},
-
-	refresh: function() {
-		var children,
-			that = this;
-
-		this._addClass( "ui-controlgroup ui-controlgroup-" + this.options.direction );
-
-		if ( this.options.direction === "horizontal" ) {
-			this._addClass( null, "ui-helper-clearfix" );
-		}
-		this._initWidgets();
-
-		children = this.childWidgets;
-
-		// We filter here because we need to track all childWidgets not just the visible ones
-		if ( this.options.onlyVisible ) {
-			children = children.filter( ":visible" );
-		}
-
-		if ( children.length ) {
-
-			// We do this last because we need to make sure all enhancment is done
-			// before determining first and last
-			$.each( [ "first", "last" ], function( index, value ) {
-				var instance = children[ value ]().data( "ui-controlgroup-data" );
-
-				if ( instance && that[ "_" + instance.widgetName + "Options" ] ) {
-					var options = that[ "_" + instance.widgetName + "Options" ](
-						children.length === 1 ? "only" : value
-					);
-					options.classes = that._resolveClassesValues( options.classes, instance );
-					instance.element[ instance.widgetName ]( options );
-				} else {
-					that._updateCornerClass( children[ value ](), value );
-				}
-			} );
-
-			// Finally call the refresh method on each of the child widgets.
-			this._callChildMethod( "refresh" );
-		}
-	}
-} );
-
-/*!
- * jQuery UI Checkboxradio 1.12.1
- * http://jqueryui.com
- *
- * Copyright jQuery Foundation and other contributors
- * Released under the MIT license.
- * http://jquery.org/license
- */
-
-//>>label: Checkboxradio
-//>>group: Widgets
-//>>description: Enhances a form with multiple themeable checkboxes or radio buttons.
-//>>docs: http://api.jqueryui.com/checkboxradio/
-//>>demos: http://jqueryui.com/checkboxradio/
-//>>css.structure: ../../themes/base/core.css
-//>>css.structure: ../../themes/base/button.css
-//>>css.structure: ../../themes/base/checkboxradio.css
-//>>css.theme: ../../themes/base/theme.css
-
-
-
-$.widget( "ui.checkboxradio", [ $.ui.formResetMixin, {
-	version: "1.12.1",
-	options: {
-		disabled: null,
-		label: null,
-		icon: true,
-		classes: {
-			"ui-checkboxradio-label": "ui-corner-all",
-			"ui-checkboxradio-icon": "ui-corner-all"
-		}
-	},
-
-	_getCreateOptions: function() {
-		var disabled, labels;
-		var that = this;
-		var options = this._super() || {};
-
-		// We read the type here, because it makes more sense to throw a element type error first,
-		// rather then the error for lack of a label. Often if its the wrong type, it
-		// won't have a label (e.g. calling on a div, btn, etc)
-		this._readType();
-
-		labels = this.element.labels();
-
-		// If there are multiple labels, use the last one
-		this.label = $( labels[ labels.length - 1 ] );
-		if ( !this.label.length ) {
-			$.error( "No label found for checkboxradio widget" );
-		}
-
-		this.originalLabel = "";
-
-		// We need to get the label text but this may also need to make sure it does not contain the
-		// input itself.
-		this.label.contents().not( this.element[ 0 ] ).each( function() {
-
-			// The label contents could be text, html, or a mix. We concat each element to get a
-			// string representation of the label, without the input as part of it.
-			that.originalLabel += this.nodeType === 3 ? $( this ).text() : this.outerHTML;
-		} );
-
-		// Set the label option if we found label text
-		if ( this.originalLabel ) {
-			options.label = this.originalLabel;
-		}
-
-		disabled = this.element[ 0 ].disabled;
-		if ( disabled != null ) {
-			options.disabled = disabled;
-		}
-		return options;
-	},
-
-	_create: function() {
-		var checked = this.element[ 0 ].checked;
-
-		this._bindFormResetHandler();
-
-		if ( this.options.disabled == null ) {
-			this.options.disabled = this.element[ 0 ].disabled;
-		}
-
-		this._setOption( "disabled", this.options.disabled );
-		this._addClass( "ui-checkboxradio", "ui-helper-hidden-accessible" );
-		this._addClass( this.label, "ui-checkboxradio-label", "ui-button ui-widget" );
-
-		if ( this.type === "radio" ) {
-			this._addClass( this.label, "ui-checkboxradio-radio-label" );
-		}
-
-		if ( this.options.label && this.options.label !== this.originalLabel ) {
-			this._updateLabel();
-		} else if ( this.originalLabel ) {
-			this.options.label = this.originalLabel;
-		}
-
-		this._enhance();
-
-		if ( checked ) {
-			this._addClass( this.label, "ui-checkboxradio-checked", "ui-state-active" );
-			if ( this.icon ) {
-				this._addClass( this.icon, null, "ui-state-hover" );
-			}
-		}
-
-		this._on( {
-			change: "_toggleClasses",
-			focus: function() {
-				this._addClass( this.label, null, "ui-state-focus ui-visual-focus" );
-			},
-			blur: function() {
-				this._removeClass( this.label, null, "ui-state-focus ui-visual-focus" );
-			}
-		} );
-	},
-
-	_readType: function() {
-		var nodeName = this.element[ 0 ].nodeName.toLowerCase();
-		this.type = this.element[ 0 ].type;
-		if ( nodeName !== "input" || !/radio|checkbox/.test( this.type ) ) {
-			$.error( "Can't create checkboxradio on element.nodeName=" + nodeName +
-				" and element.type=" + this.type );
-		}
-	},
-
-	// Support jQuery Mobile enhanced option
-	_enhance: function() {
-		this._updateIcon( this.element[ 0 ].checked );
-	},
-
-	widget: function() {
-		return this.label;
-	},
-
-	_getRadioGroup: function() {
-		var group;
-		var name = this.element[ 0 ].name;
-		var nameSelector = "input[name='" + $.ui.escapeSelector( name ) + "']";
-
-		if ( !name ) {
-			return $( [] );
-		}
-
-		if ( this.form.length ) {
-			group = $( this.form[ 0 ].elements ).filter( nameSelector );
-		} else {
-
-			// Not inside a form, check all inputs that also are not inside a form
-			group = $( nameSelector ).filter( function() {
-				return $( this ).form().length === 0;
-			} );
-		}
-
-		return group.not( this.element );
-	},
-
-	_toggleClasses: function() {
-		var checked = this.element[ 0 ].checked;
-		this._toggleClass( this.label, "ui-checkboxradio-checked", "ui-state-active", checked );
-
-		if ( this.options.icon && this.type === "checkbox" ) {
-			this._toggleClass( this.icon, null, "ui-icon-check ui-state-checked", checked )
-				._toggleClass( this.icon, null, "ui-icon-blank", !checked );
-		}
-
-		if ( this.type === "radio" ) {
-			this._getRadioGroup()
-				.each( function() {
-					var instance = $( this ).checkboxradio( "instance" );
-
-					if ( instance ) {
-						instance._removeClass( instance.label,
-							"ui-checkboxradio-checked", "ui-state-active" );
-					}
-				} );
-		}
-	},
-
-	_destroy: function() {
-		this._unbindFormResetHandler();
-
-		if ( this.icon ) {
-			this.icon.remove();
-			this.iconSpace.remove();
-		}
-	},
-
-	_setOption: function( key, value ) {
-
-		// We don't allow the value to be set to nothing
-		if ( key === "label" && !value ) {
-			return;
-		}
-
-		this._super( key, value );
-
-		if ( key === "disabled" ) {
-			this._toggleClass( this.label, null, "ui-state-disabled", value );
-			this.element[ 0 ].disabled = value;
-
-			// Don't refresh when setting disabled
-			return;
-		}
-		this.refresh();
-	},
-
-	_updateIcon: function( checked ) {
-		var toAdd = "ui-icon ui-icon-background ";
-
-		if ( this.options.icon ) {
-			if ( !this.icon ) {
-				this.icon = $( "<span>" );
-				this.iconSpace = $( "<span> </span>" );
-				this._addClass( this.iconSpace, "ui-checkboxradio-icon-space" );
-			}
-
-			if ( this.type === "checkbox" ) {
-				toAdd += checked ? "ui-icon-check ui-state-checked" : "ui-icon-blank";
-				this._removeClass( this.icon, null, checked ? "ui-icon-blank" : "ui-icon-check" );
-			} else {
-				toAdd += "ui-icon-blank";
-			}
-			this._addClass( this.icon, "ui-checkboxradio-icon", toAdd );
-			if ( !checked ) {
-				this._removeClass( this.icon, null, "ui-icon-check ui-state-checked" );
-			}
-			this.icon.prependTo( this.label ).after( this.iconSpace );
-		} else if ( this.icon !== undefined ) {
-			this.icon.remove();
-			this.iconSpace.remove();
-			delete this.icon;
-		}
-	},
-
-	_updateLabel: function() {
-
-		// Remove the contents of the label ( minus the icon, icon space, and input )
-		var contents = this.label.contents().not( this.element[ 0 ] );
-		if ( this.icon ) {
-			contents = contents.not( this.icon[ 0 ] );
-		}
-		if ( this.iconSpace ) {
-			contents = contents.not( this.iconSpace[ 0 ] );
-		}
-		contents.remove();
-
-		this.label.append( this.options.label );
-	},
-
-	refresh: function() {
-		var checked = this.element[ 0 ].checked,
-			isDisabled = this.element[ 0 ].disabled;
-
-		this._updateIcon( checked );
-		this._toggleClass( this.label, "ui-checkboxradio-checked", "ui-state-active", checked );
-		if ( this.options.label !== null ) {
-			this._updateLabel();
-		}
-
-		if ( isDisabled !== this.options.disabled ) {
-			this._setOptions( { "disabled": isDisabled } );
-		}
-	}
-
-} ] );
-
-var widgetsCheckboxradio = $.ui.checkboxradio;
-
-
-/*!
- * jQuery UI Button 1.12.1
- * http://jqueryui.com
- *
- * Copyright jQuery Foundation and other contributors
- * Released under the MIT license.
- * http://jquery.org/license
- */
-
-//>>label: Button
-//>>group: Widgets
-//>>description: Enhances a form with themeable buttons.
-//>>docs: http://api.jqueryui.com/button/
-//>>demos: http://jqueryui.com/button/
-//>>css.structure: ../../themes/base/core.css
-//>>css.structure: ../../themes/base/button.css
-//>>css.theme: ../../themes/base/theme.css
-
-
-
+/* UI Button */
 $.widget( "ui.button", {
 	version: "1.12.1",
 	defaultElement: "<button>",
@@ -8020,129 +7033,7 @@ $.widget( "ui.button", {
 	}
 } );
 
-// DEPRECATED
-if ( $.uiBackCompat !== false ) {
-
-	// Text and Icons options
-	$.widget( "ui.button", $.ui.button, {
-		options: {
-			text: true,
-			icons: {
-				primary: null,
-				secondary: null
-			}
-		},
-
-		_create: function() {
-			if ( this.options.showLabel && !this.options.text ) {
-				this.options.showLabel = this.options.text;
-			}
-			if ( !this.options.showLabel && this.options.text ) {
-				this.options.text = this.options.showLabel;
-			}
-			if ( !this.options.icon && ( this.options.icons.primary ||
-					this.options.icons.secondary ) ) {
-				if ( this.options.icons.primary ) {
-					this.options.icon = this.options.icons.primary;
-				} else {
-					this.options.icon = this.options.icons.secondary;
-					this.options.iconPosition = "end";
-				}
-			} else if ( this.options.icon ) {
-				this.options.icons.primary = this.options.icon;
-			}
-			this._super();
-		},
-
-		_setOption: function( key, value ) {
-			if ( key === "text" ) {
-				this._super( "showLabel", value );
-				return;
-			}
-			if ( key === "showLabel" ) {
-				this.options.text = value;
-			}
-			if ( key === "icon" ) {
-				this.options.icons.primary = value;
-			}
-			if ( key === "icons" ) {
-				if ( value.primary ) {
-					this._super( "icon", value.primary );
-					this._super( "iconPosition", "beginning" );
-				} else if ( value.secondary ) {
-					this._super( "icon", value.secondary );
-					this._super( "iconPosition", "end" );
-				}
-			}
-			this._superApply( arguments );
-		}
-	} );
-
-	$.fn.button = ( function( orig ) {
-		return function() {
-			if ( !this.length || ( this.length && this[ 0 ].tagName !== "INPUT" ) ||
-					( this.length && this[ 0 ].tagName === "INPUT" && (
-						this.attr( "type" ) !== "checkbox" && this.attr( "type" ) !== "radio"
-					) ) ) {
-				return orig.apply( this, arguments );
-			}
-			if ( !$.ui.checkboxradio ) {
-				$.error( "Checkboxradio widget missing" );
-			}
-			if ( arguments.length === 0 ) {
-				return this.checkboxradio( {
-					"icon": false
-				} );
-			}
-			return this.checkboxradio.apply( this, arguments );
-		};
-	} )( $.fn.button );
-
-	$.fn.buttonset = function() {
-		if ( !$.ui.controlgroup ) {
-			$.error( "Controlgroup widget missing" );
-		}
-		if ( arguments[ 0 ] === "option" && arguments[ 1 ] === "items" && arguments[ 2 ] ) {
-			return this.controlgroup.apply( this,
-				[ arguments[ 0 ], "items.button", arguments[ 2 ] ] );
-		}
-		if ( arguments[ 0 ] === "option" && arguments[ 1 ] === "items" ) {
-			return this.controlgroup.apply( this, [ arguments[ 0 ], "items.button" ] );
-		}
-		if ( typeof arguments[ 0 ] === "object" && arguments[ 0 ].items ) {
-			arguments[ 0 ].items = {
-				button: arguments[ 0 ].items
-			};
-		}
-		return this.controlgroup.apply( this, arguments );
-	};
-}
-
-var widgetsButton = $.ui.button;
-
-
-// jscs:disable maximumLineLength
-/* jscs:disable requireCamelCaseOrUpperCaseIdentifiers */
-/*!
- * jQuery UI Datepicker 1.12.1
- * http://jqueryui.com
- *
- * Copyright jQuery Foundation and other contributors
- * Released under the MIT license.
- * http://jquery.org/license
- */
-
-//>>label: Datepicker
-//>>group: Widgets
-//>>description: Displays a calendar from an input or inline for selecting dates.
-//>>docs: http://api.jqueryui.com/datepicker/
-//>>demos: http://jqueryui.com/datepicker/
-//>>css.structure: ../../themes/base/core.css
-//>>css.structure: ../../themes/base/datepicker.css
-//>>css.theme: ../../themes/base/theme.css
-
-
-
+/* UI Datepicker */
 $.extend( $.ui, { datepicker: { version: "1.12.1" } } );
 
 var datepicker_instActive;
@@ -10224,29 +9115,7 @@ $.datepicker.initialized = false;
 $.datepicker.uuid = new Date().getTime();
 $.datepicker.version = "1.12.1";
 
-var widgetsDatepicker = $.datepicker;
-
-
-/*!
- * jQuery UI Dialog 1.12.1
- * http://jqueryui.com
- *
- * Copyright jQuery Foundation and other contributors
- * Released under the MIT license.
- * http://jquery.org/license
- */
-
-//>>label: Dialog
-//>>group: Widgets
-//>>description: Displays customizable dialog windows.
-//>>docs: http://api.jqueryui.com/dialog/
-//>>demos: http://jqueryui.com/dialog/
-//>>css.structure: ../../themes/base/core.css
-//>>css.structure: ../../themes/base/dialog.css
-//>>css.theme: ../../themes/base/theme.css
-
-
-
+/* UI Dialog */
 $.widget( "ui.dialog", {
 	version: "1.12.1",
 	options: {
@@ -11115,49 +9984,26 @@ $.widget( "ui.dialog", {
 	}
 } );
 
-// DEPRECATED
-// TODO: switch return back to widget declaration at top of file when this is removed
-if ( $.uiBackCompat !== false ) {
-
-	// Backcompat for dialogClass option
-	$.widget( "ui.dialog", $.ui.dialog, {
-		options: {
-			dialogClass: ""
-		},
-		_createWrapper: function() {
-			this._super();
-			this.uiDialog.addClass( this.options.dialogClass );
-		},
-		_setOption: function( key, value ) {
-			if ( key === "dialogClass" ) {
-				this.uiDialog
-					.removeClass( this.options.dialogClass )
-					.addClass( value );
-			}
-			this._superApply( arguments );
+// Backcompat for dialogClass option
+$.widget( "ui.dialog", $.ui.dialog, {
+	options: {
+		dialogClass: ""
+	},
+	_createWrapper: function() {
+		this._super();
+		this.uiDialog.addClass( this.options.dialogClass );
+	},
+	_setOption: function( key, value ) {
+		if ( key === "dialogClass" ) {
+			this.uiDialog
+				.removeClass( this.options.dialogClass )
+				.addClass( value );
 		}
-	} );
-}
+		this._superApply( arguments );
+	}
+} );
 
-var widgetsDialog = $.ui.dialog;
-
-/*!
- * jQuery UI Droppable 1.12.1
- * http://jqueryui.com
- *
- * Copyright jQuery Foundation and other contributors
- * Released under the MIT license.
- * http://jquery.org/license
- */
-
-//>>label: Droppable
-//>>group: Interactions
-//>>description: Enables drop targets for draggable elements.
-//>>docs: http://api.jqueryui.com/droppable/
-//>>demos: http://jqueryui.com/droppable/
-
-
-
+/* UI Droppable */
 $.widget( "ui.droppable", {
 	version: "1.12.1",
 	widgetEventPrefix: "drop",
@@ -11582,69 +10428,40 @@ $.ui.ddmanager = {
 	}
 };
 
-// DEPRECATED
-// TODO: switch return back to widget declaration at top of file when this is removed
-if ( $.uiBackCompat !== false ) {
-
-	// Backcompat for activeClass and hoverClass options
-	$.widget( "ui.droppable", $.ui.droppable, {
-		options: {
-			hoverClass: false,
-			activeClass: false
-		},
-		_addActiveClass: function() {
-			this._super();
-			if ( this.options.activeClass ) {
-				this.element.addClass( this.options.activeClass );
-			}
-		},
-		_removeActiveClass: function() {
-			this._super();
-			if ( this.options.activeClass ) {
-				this.element.removeClass( this.options.activeClass );
-			}
-		},
-		_addHoverClass: function() {
-			this._super();
-			if ( this.options.hoverClass ) {
-				this.element.addClass( this.options.hoverClass );
-			}
-		},
-		_removeHoverClass: function() {
-			this._super();
-			if ( this.options.hoverClass ) {
-				this.element.removeClass( this.options.hoverClass );
-			}
+// Backcompat for activeClass and hoverClass options
+$.widget( "ui.droppable", $.ui.droppable, {
+	options: {
+		hoverClass: false,
+		activeClass: false
+	},
+	_addActiveClass: function() {
+		this._super();
+		if ( this.options.activeClass ) {
+			this.element.addClass( this.options.activeClass );
 		}
-	} );
-}
+	},
+	_removeActiveClass: function() {
+		this._super();
+		if ( this.options.activeClass ) {
+			this.element.removeClass( this.options.activeClass );
+		}
+	},
+	_addHoverClass: function() {
+		this._super();
+		if ( this.options.hoverClass ) {
+			this.element.addClass( this.options.hoverClass );
+		}
+	},
+	_removeHoverClass: function() {
+		this._super();
+		if ( this.options.hoverClass ) {
+			this.element.removeClass( this.options.hoverClass );
+		}
+	}
+} );
 
-var widgetsDroppable = $.ui.droppable;
-
-
-/*!
- * jQuery UI Progressbar 1.12.1
- * http://jqueryui.com
- *
- * Copyright jQuery Foundation and other contributors
- * Released under the MIT license.
- * http://jquery.org/license
- */
-
-//>>label: Progressbar
-//>>group: Widgets
-// jscs:disable maximumLineLength
-//>>description: Displays a status indicator for loading state, standard percentage, and other progress indicators.
-// jscs:enable maximumLineLength
-//>>docs: http://api.jqueryui.com/progressbar/
-//>>demos: http://jqueryui.com/progressbar/
-//>>css.structure: ../../themes/base/core.css
-//>>css.structure: ../../themes/base/progressbar.css
-//>>css.theme: ../../themes/base/theme.css
-
-
-
-var widgetsProgressbar = $.widget( "ui.progressbar", {
+/* UI Progressbar */
+$.widget( "ui.progressbar", {
 	version: "1.12.1",
 	options: {
 		classes: {
@@ -11786,26 +10603,7 @@ var widgetsProgressbar = $.widget( "ui.progressbar", {
 } );
 
 
-/*!
- * jQuery UI Tabs 1.12.1
- * http://jqueryui.com
- *
- * Copyright jQuery Foundation and other contributors
- * Released under the MIT license.
- * http://jquery.org/license
- */
-
-//>>label: Tabs
-//>>group: Widgets
-//>>description: Transforms a set of container elements into a tab structure.
-//>>docs: http://api.jqueryui.com/tabs/
-//>>demos: http://jqueryui.com/tabs/
-//>>css.structure: ../../themes/base/core.css
-//>>css.structure: ../../themes/base/tabs.css
-//>>css.theme: ../../themes/base/theme.css
-
-
-
+/* UI Tabs */
 $.widget( "ui.tabs", {
 	version: "1.12.1",
 	delay: 300,
@@ -12676,805 +11474,13 @@ $.widget( "ui.tabs", {
 	}
 } );
 
-// DEPRECATED
-// TODO: Switch return back to widget declaration at top of file when this is removed
-if ( $.uiBackCompat !== false ) {
-
-	// Backcompat for ui-tab class (now ui-tabs-tab)
-	$.widget( "ui.tabs", $.ui.tabs, {
-		_processTabs: function() {
-			this._superApply( arguments );
-			this._addClass( this.tabs, "ui-tab" );
-		}
-	} );
-}
-
-var widgetsTabs = $.ui.tabs;
-
-
-/*!
- * jQuery UI Effects 1.12.1
- * http://jqueryui.com
- *
- * Copyright jQuery Foundation and other contributors
- * Released under the MIT license.
- * http://jquery.org/license
- */
-
-//>>label: Effects Core
-//>>group: Effects
-// jscs:disable maximumLineLength
-//>>description: Extends the internal jQuery effects. Includes morphing and easing. Required by all other effects.
-// jscs:enable maximumLineLength
-//>>docs: http://api.jqueryui.com/category/effects-core/
-//>>demos: http://jqueryui.com/effect/
-
-
-
-var dataSpace = "ui-effects-",
-	dataSpaceStyle = "ui-effects-style",
-	dataSpaceAnimated = "ui-effects-animated",
-
-	// Create a local jQuery because jQuery Color relies on it and the
-	// global may not exist with AMD and a custom build (#10199)
-	jQuery = $;
-
-$.effects = {
-	effect: {}
-};
-
-/*!
- * jQuery Color Animations v2.1.2
- * https://github.com/jquery/jquery-color
- *
- * Copyright 2014 jQuery Foundation and other contributors
- * Released under the MIT license.
- * http://jquery.org/license
- *
- * Date: Wed Jan 16 08:47:09 2013 -0600
- */
-( function( jQuery, undefined ) {
-
-	var stepHooks = "backgroundColor borderBottomColor borderLeftColor borderRightColor " +
-		"borderTopColor color columnRuleColor outlineColor textDecorationColor textEmphasisColor",
-
-	// Plusequals test for += 100 -= 100
-	rplusequals = /^([\-+])=\s*(\d+\.?\d*)/,
-
-	// A set of RE's that can match strings and generate color tuples.
-	stringParsers = [ {
-			re: /rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*(?:,\s*(\d?(?:\.\d+)?)\s*)?\)/,
-			parse: function( execResult ) {
-				return [
-					execResult[ 1 ],
-					execResult[ 2 ],
-					execResult[ 3 ],
-					execResult[ 4 ]
-				];
-			}
-		}, {
-			re: /rgba?\(\s*(\d+(?:\.\d+)?)\%\s*,\s*(\d+(?:\.\d+)?)\%\s*,\s*(\d+(?:\.\d+)?)\%\s*(?:,\s*(\d?(?:\.\d+)?)\s*)?\)/,
-			parse: function( execResult ) {
-				return [
-					execResult[ 1 ] * 2.55,
-					execResult[ 2 ] * 2.55,
-					execResult[ 3 ] * 2.55,
-					execResult[ 4 ]
-				];
-			}
-		}, {
-
-			// This regex ignores A-F because it's compared against an already lowercased string
-			re: /#([a-f0-9]{2})([a-f0-9]{2})([a-f0-9]{2})/,
-			parse: function( execResult ) {
-				return [
-					parseInt( execResult[ 1 ], 16 ),
-					parseInt( execResult[ 2 ], 16 ),
-					parseInt( execResult[ 3 ], 16 )
-				];
-			}
-		}, {
-
-			// This regex ignores A-F because it's compared against an already lowercased string
-			re: /#([a-f0-9])([a-f0-9])([a-f0-9])/,
-			parse: function( execResult ) {
-				return [
-					parseInt( execResult[ 1 ] + execResult[ 1 ], 16 ),
-					parseInt( execResult[ 2 ] + execResult[ 2 ], 16 ),
-					parseInt( execResult[ 3 ] + execResult[ 3 ], 16 )
-				];
-			}
-		}, {
-			re: /hsla?\(\s*(\d+(?:\.\d+)?)\s*,\s*(\d+(?:\.\d+)?)\%\s*,\s*(\d+(?:\.\d+)?)\%\s*(?:,\s*(\d?(?:\.\d+)?)\s*)?\)/,
-			space: "hsla",
-			parse: function( execResult ) {
-				return [
-					execResult[ 1 ],
-					execResult[ 2 ] / 100,
-					execResult[ 3 ] / 100,
-					execResult[ 4 ]
-				];
-			}
-		} ],
-
-	// JQuery.Color( )
-	color = jQuery.Color = function( color, green, blue, alpha ) {
-		return new jQuery.Color.fn.parse( color, green, blue, alpha );
-	},
-	spaces = {
-		rgba: {
-			props: {
-				red: {
-					idx: 0,
-					type: "byte"
-				},
-				green: {
-					idx: 1,
-					type: "byte"
-				},
-				blue: {
-					idx: 2,
-					type: "byte"
-				}
-			}
-		},
-
-		hsla: {
-			props: {
-				hue: {
-					idx: 0,
-					type: "degrees"
-				},
-				saturation: {
-					idx: 1,
-					type: "percent"
-				},
-				lightness: {
-					idx: 2,
-					type: "percent"
-				}
-			}
-		}
-	},
-	propTypes = {
-		"byte": {
-			floor: true,
-			max: 255
-		},
-		"percent": {
-			max: 1
-		},
-		"degrees": {
-			mod: 360,
-			floor: true
-		}
-	},
-	support = color.support = {},
-
-	// Element for support tests
-	supportElem = jQuery( "<p>" )[ 0 ],
-
-	// Colors = jQuery.Color.names
-	colors,
-
-	// Local aliases of functions called often
-	each = jQuery.each;
-
-// Determine rgba support immediately
-supportElem.style.cssText = "background-color:rgba(1,1,1,.5)";
-support.rgba = supportElem.style.backgroundColor.indexOf( "rgba" ) > -1;
-
-// Define cache name and alpha properties
-// for rgba and hsla spaces
-each( spaces, function( spaceName, space ) {
-	space.cache = "_" + spaceName;
-	space.props.alpha = {
-		idx: 3,
-		type: "percent",
-		def: 1
-	};
-} );
-
-function clamp( value, prop, allowEmpty ) {
-	var type = propTypes[ prop.type ] || {};
-
-	if ( value == null ) {
-		return ( allowEmpty || !prop.def ) ? null : prop.def;
-	}
-
-	// ~~ is an short way of doing floor for positive numbers
-	value = type.floor ? ~~value : parseFloat( value );
-
-	// IE will pass in empty strings as value for alpha,
-	// which will hit this case
-	if ( isNaN( value ) ) {
-		return prop.def;
-	}
-
-	if ( type.mod ) {
-
-		// We add mod before modding to make sure that negatives values
-		// get converted properly: -10 -> 350
-		return ( value + type.mod ) % type.mod;
-	}
-
-	// For now all property types without mod have min and max
-	return 0 > value ? 0 : type.max < value ? type.max : value;
-}
-
-function stringParse( string ) {
-	var inst = color(),
-		rgba = inst._rgba = [];
-
-	string = string.toLowerCase();
-
-	each( stringParsers, function( i, parser ) {
-		var parsed,
-			match = parser.re.exec( string ),
-			values = match && parser.parse( match ),
-			spaceName = parser.space || "rgba";
-
-		if ( values ) {
-			parsed = inst[ spaceName ]( values );
-
-			// If this was an rgba parse the assignment might happen twice
-			// oh well....
-			inst[ spaces[ spaceName ].cache ] = parsed[ spaces[ spaceName ].cache ];
-			rgba = inst._rgba = parsed._rgba;
-
-			// Exit each( stringParsers ) here because we matched
-			return false;
-		}
-	} );
-
-	// Found a stringParser that handled it
-	if ( rgba.length ) {
-
-		// If this came from a parsed string, force "transparent" when alpha is 0
-		// chrome, (and maybe others) return "transparent" as rgba(0,0,0,0)
-		if ( rgba.join() === "0,0,0,0" ) {
-			jQuery.extend( rgba, colors.transparent );
-		}
-		return inst;
-	}
-
-	// Named colors
-	return colors[ string ];
-}
-
-color.fn = jQuery.extend( color.prototype, {
-	parse: function( red, green, blue, alpha ) {
-		if ( red === undefined ) {
-			this._rgba = [ null, null, null, null ];
-			return this;
-		}
-		if ( red.jquery || red.nodeType ) {
-			red = jQuery( red ).css( green );
-			green = undefined;
-		}
-
-		var inst = this,
-			type = jQuery.type( red ),
-			rgba = this._rgba = [];
-
-		// More than 1 argument specified - assume ( red, green, blue, alpha )
-		if ( green !== undefined ) {
-			red = [ red, green, blue, alpha ];
-			type = "array";
-		}
-
-		if ( type === "string" ) {
-			return this.parse( stringParse( red ) || colors._default );
-		}
-
-		if ( type === "array" ) {
-			each( spaces.rgba.props, function( key, prop ) {
-				rgba[ prop.idx ] = clamp( red[ prop.idx ], prop );
-			} );
-			return this;
-		}
-
-		if ( type === "object" ) {
-			if ( red instanceof color ) {
-				each( spaces, function( spaceName, space ) {
-					if ( red[ space.cache ] ) {
-						inst[ space.cache ] = red[ space.cache ].slice();
-					}
-				} );
-			} else {
-				each( spaces, function( spaceName, space ) {
-					var cache = space.cache;
-					each( space.props, function( key, prop ) {
-
-						// If the cache doesn't exist, and we know how to convert
-						if ( !inst[ cache ] && space.to ) {
-
-							// If the value was null, we don't need to copy it
-							// if the key was alpha, we don't need to copy it either
-							if ( key === "alpha" || red[ key ] == null ) {
-								return;
-							}
-							inst[ cache ] = space.to( inst._rgba );
-						}
-
-						// This is the only case where we allow nulls for ALL properties.
-						// call clamp with alwaysAllowEmpty
-						inst[ cache ][ prop.idx ] = clamp( red[ key ], prop, true );
-					} );
-
-					// Everything defined but alpha?
-					if ( inst[ cache ] &&
-							jQuery.inArray( null, inst[ cache ].slice( 0, 3 ) ) < 0 ) {
-
-						// Use the default of 1
-						inst[ cache ][ 3 ] = 1;
-						if ( space.from ) {
-							inst._rgba = space.from( inst[ cache ] );
-						}
-					}
-				} );
-			}
-			return this;
-		}
-	},
-	is: function( compare ) {
-		var is = color( compare ),
-			same = true,
-			inst = this;
-
-		each( spaces, function( _, space ) {
-			var localCache,
-				isCache = is[ space.cache ];
-			if ( isCache ) {
-				localCache = inst[ space.cache ] || space.to && space.to( inst._rgba ) || [];
-				each( space.props, function( _, prop ) {
-					if ( isCache[ prop.idx ] != null ) {
-						same = ( isCache[ prop.idx ] === localCache[ prop.idx ] );
-						return same;
-					}
-				} );
-			}
-			return same;
-		} );
-		return same;
-	},
-	_space: function() {
-		var used = [],
-			inst = this;
-		each( spaces, function( spaceName, space ) {
-			if ( inst[ space.cache ] ) {
-				used.push( spaceName );
-			}
-		} );
-		return used.pop();
-	},
-	transition: function( other, distance ) {
-		var end = color( other ),
-			spaceName = end._space(),
-			space = spaces[ spaceName ],
-			startColor = this.alpha() === 0 ? color( "transparent" ) : this,
-			start = startColor[ space.cache ] || space.to( startColor._rgba ),
-			result = start.slice();
-
-		end = end[ space.cache ];
-		each( space.props, function( key, prop ) {
-			var index = prop.idx,
-				startValue = start[ index ],
-				endValue = end[ index ],
-				type = propTypes[ prop.type ] || {};
-
-			// If null, don't override start value
-			if ( endValue === null ) {
-				return;
-			}
-
-			// If null - use end
-			if ( startValue === null ) {
-				result[ index ] = endValue;
-			} else {
-				if ( type.mod ) {
-					if ( endValue - startValue > type.mod / 2 ) {
-						startValue += type.mod;
-					} else if ( startValue - endValue > type.mod / 2 ) {
-						startValue -= type.mod;
-					}
-				}
-				result[ index ] = clamp( ( endValue - startValue ) * distance + startValue, prop );
-			}
-		} );
-		return this[ spaceName ]( result );
-	},
-	blend: function( opaque ) {
-
-		// If we are already opaque - return ourself
-		if ( this._rgba[ 3 ] === 1 ) {
-			return this;
-		}
-
-		var rgb = this._rgba.slice(),
-			a = rgb.pop(),
-			blend = color( opaque )._rgba;
-
-		return color( jQuery.map( rgb, function( v, i ) {
-			return ( 1 - a ) * blend[ i ] + a * v;
-		} ) );
-	},
-	toRgbaString: function() {
-		var prefix = "rgba(",
-			rgba = jQuery.map( this._rgba, function( v, i ) {
-				return v == null ? ( i > 2 ? 1 : 0 ) : v;
-			} );
-
-		if ( rgba[ 3 ] === 1 ) {
-			rgba.pop();
-			prefix = "rgb(";
-		}
-
-		return prefix + rgba.join() + ")";
-	},
-	toHslaString: function() {
-		var prefix = "hsla(",
-			hsla = jQuery.map( this.hsla(), function( v, i ) {
-				if ( v == null ) {
-					v = i > 2 ? 1 : 0;
-				}
-
-				// Catch 1 and 2
-				if ( i && i < 3 ) {
-					v = Math.round( v * 100 ) + "%";
-				}
-				return v;
-			} );
-
-		if ( hsla[ 3 ] === 1 ) {
-			hsla.pop();
-			prefix = "hsl(";
-		}
-		return prefix + hsla.join() + ")";
-	},
-	toHexString: function( includeAlpha ) {
-		var rgba = this._rgba.slice(),
-			alpha = rgba.pop();
-
-		if ( includeAlpha ) {
-			rgba.push( ~~( alpha * 255 ) );
-		}
-
-		return "#" + jQuery.map( rgba, function( v ) {
-
-			// Default to 0 when nulls exist
-			v = ( v || 0 ).toString( 16 );
-			return v.length === 1 ? "0" + v : v;
-		} ).join( "" );
-	},
-	toString: function() {
-		return this._rgba[ 3 ] === 0 ? "transparent" : this.toRgbaString();
+// Backcompat for ui-tab class (now ui-tabs-tab)
+$.widget( "ui.tabs", $.ui.tabs, {
+	_processTabs: function() {
+		this._superApply( arguments );
+		this._addClass( this.tabs, "ui-tab" );
 	}
 } );
-color.fn.parse.prototype = color.fn;
-
-// Hsla conversions adapted from:
-// https://code.google.com/p/maashaack/source/browse/packages/graphics/trunk/src/graphics/colors/HUE2RGB.as?r=5021
-
-function hue2rgb( p, q, h ) {
-	h = ( h + 1 ) % 1;
-	if ( h * 6 < 1 ) {
-		return p + ( q - p ) * h * 6;
-	}
-	if ( h * 2 < 1 ) {
-		return q;
-	}
-	if ( h * 3 < 2 ) {
-		return p + ( q - p ) * ( ( 2 / 3 ) - h ) * 6;
-	}
-	return p;
-}
-
-spaces.hsla.to = function( rgba ) {
-	if ( rgba[ 0 ] == null || rgba[ 1 ] == null || rgba[ 2 ] == null ) {
-		return [ null, null, null, rgba[ 3 ] ];
-	}
-	var r = rgba[ 0 ] / 255,
-		g = rgba[ 1 ] / 255,
-		b = rgba[ 2 ] / 255,
-		a = rgba[ 3 ],
-		max = Math.max( r, g, b ),
-		min = Math.min( r, g, b ),
-		diff = max - min,
-		add = max + min,
-		l = add * 0.5,
-		h, s;
-
-	if ( min === max ) {
-		h = 0;
-	} else if ( r === max ) {
-		h = ( 60 * ( g - b ) / diff ) + 360;
-	} else if ( g === max ) {
-		h = ( 60 * ( b - r ) / diff ) + 120;
-	} else {
-		h = ( 60 * ( r - g ) / diff ) + 240;
-	}
-
-	// Chroma (diff) == 0 means greyscale which, by definition, saturation = 0%
-	// otherwise, saturation is based on the ratio of chroma (diff) to lightness (add)
-	if ( diff === 0 ) {
-		s = 0;
-	} else if ( l <= 0.5 ) {
-		s = diff / add;
-	} else {
-		s = diff / ( 2 - add );
-	}
-	return [ Math.round( h ) % 360, s, l, a == null ? 1 : a ];
-};
-
-spaces.hsla.from = function( hsla ) {
-	if ( hsla[ 0 ] == null || hsla[ 1 ] == null || hsla[ 2 ] == null ) {
-		return [ null, null, null, hsla[ 3 ] ];
-	}
-	var h = hsla[ 0 ] / 360,
-		s = hsla[ 1 ],
-		l = hsla[ 2 ],
-		a = hsla[ 3 ],
-		q = l <= 0.5 ? l * ( 1 + s ) : l + s - l * s,
-		p = 2 * l - q;
-
-	return [
-		Math.round( hue2rgb( p, q, h + ( 1 / 3 ) ) * 255 ),
-		Math.round( hue2rgb( p, q, h ) * 255 ),
-		Math.round( hue2rgb( p, q, h - ( 1 / 3 ) ) * 255 ),
-		a
-	];
-};
-
-each( spaces, function( spaceName, space ) {
-	var props = space.props,
-		cache = space.cache,
-		to = space.to,
-		from = space.from;
-
-	// Makes rgba() and hsla()
-	color.fn[ spaceName ] = function( value ) {
-
-		// Generate a cache for this space if it doesn't exist
-		if ( to && !this[ cache ] ) {
-			this[ cache ] = to( this._rgba );
-		}
-		if ( value === undefined ) {
-			return this[ cache ].slice();
-		}
-
-		var ret,
-			type = jQuery.type( value ),
-			arr = ( type === "array" || type === "object" ) ? value : arguments,
-			local = this[ cache ].slice();
-
-		each( props, function( key, prop ) {
-			var val = arr[ type === "object" ? key : prop.idx ];
-			if ( val == null ) {
-				val = local[ prop.idx ];
-			}
-			local[ prop.idx ] = clamp( val, prop );
-		} );
-
-		if ( from ) {
-			ret = color( from( local ) );
-			ret[ cache ] = local;
-			return ret;
-		} else {
-			return color( local );
-		}
-	};
-
-	// Makes red() green() blue() alpha() hue() saturation() lightness()
-	each( props, function( key, prop ) {
-
-		// Alpha is included in more than one space
-		if ( color.fn[ key ] ) {
-			return;
-		}
-		color.fn[ key ] = function( value ) {
-			var vtype = jQuery.type( value ),
-				fn = ( key === "alpha" ? ( this._hsla ? "hsla" : "rgba" ) : spaceName ),
-				local = this[ fn ](),
-				cur = local[ prop.idx ],
-				match;
-
-			if ( vtype === "undefined" ) {
-				return cur;
-			}
-
-			if ( vtype === "function" ) {
-				value = value.call( this, cur );
-				vtype = jQuery.type( value );
-			}
-			if ( value == null && prop.empty ) {
-				return this;
-			}
-			if ( vtype === "string" ) {
-				match = rplusequals.exec( value );
-				if ( match ) {
-					value = cur + parseFloat( match[ 2 ] ) * ( match[ 1 ] === "+" ? 1 : -1 );
-				}
-			}
-			local[ prop.idx ] = value;
-			return this[ fn ]( local );
-		};
-	} );
-} );
-
-// Add cssHook and .fx.step function for each named hook.
-// accept a space separated string of properties
-color.hook = function( hook ) {
-	var hooks = hook.split( " " );
-	each( hooks, function( i, hook ) {
-		jQuery.cssHooks[ hook ] = {
-			set: function( elem, value ) {
-				var parsed, curElem,
-					backgroundColor = "";
-
-				if ( value !== "transparent" && ( jQuery.type( value ) !== "string" ||
-						( parsed = stringParse( value ) ) ) ) {
-					value = color( parsed || value );
-					if ( !support.rgba && value._rgba[ 3 ] !== 1 ) {
-						curElem = hook === "backgroundColor" ? elem.parentNode : elem;
-						while (
-							( backgroundColor === "" || backgroundColor === "transparent" ) &&
-							curElem && curElem.style
-						) {
-							try {
-								backgroundColor = jQuery.css( curElem, "backgroundColor" );
-								curElem = curElem.parentNode;
-							} catch ( e ) {
-							}
-						}
-
-						value = value.blend( backgroundColor && backgroundColor !== "transparent" ?
-							backgroundColor :
-							"_default" );
-					}
-
-					value = value.toRgbaString();
-				}
-				try {
-					elem.style[ hook ] = value;
-				} catch ( e ) {
-
-					// Wrapped to prevent IE from throwing errors on "invalid" values like
-					// 'auto' or 'inherit'
-				}
-			}
-		};
-		jQuery.fx.step[ hook ] = function( fx ) {
-			if ( !fx.colorInit ) {
-				fx.start = color( fx.elem, hook );
-				fx.end = color( fx.end );
-				fx.colorInit = true;
-			}
-			jQuery.cssHooks[ hook ].set( fx.elem, fx.start.transition( fx.end, fx.pos ) );
-		};
-	} );
-
-};
-
-color.hook( stepHooks );
-
-jQuery.cssHooks.borderColor = {
-	expand: function( value ) {
-		var expanded = {};
-
-		each( [ "Top", "Right", "Bottom", "Left" ], function( i, part ) {
-			expanded[ "border" + part + "Color" ] = value;
-		} );
-		return expanded;
-	}
-};
-
-// Basic color names only.
-// Usage of any of the other color names requires adding yourself or including
-// jquery.color.svg-names.js.
-colors = jQuery.Color.names = {
-
-	// 4.1. Basic color keywords
-	aqua: "#00ffff",
-	black: "#000000",
-	blue: "#0000ff",
-	fuchsia: "#ff00ff",
-	gray: "#808080",
-	green: "#008000",
-	lime: "#00ff00",
-	maroon: "#800000",
-	navy: "#000080",
-	olive: "#808000",
-	purple: "#800080",
-	red: "#ff0000",
-	silver: "#c0c0c0",
-	teal: "#008080",
-	white: "#ffffff",
-	yellow: "#ffff00",
-
-	// 4.2.3. "transparent" color keyword
-	transparent: [ null, null, null, 0 ],
-
-	_default: "#ffffff"
-};
-
-} )( jQuery );
-
-/******************************************************************************/
-/****************************** CLASS ANIMATIONS ******************************/
-/******************************************************************************/
-( function() {
-
-var classAnimationActions = [ "add", "remove", "toggle" ],
-	shorthandStyles = {
-		border: 1,
-		borderBottom: 1,
-		borderColor: 1,
-		borderLeft: 1,
-		borderRight: 1,
-		borderTop: 1,
-		borderWidth: 1,
-		margin: 1,
-		padding: 1
-	};
-
-$.each(
-	[ "borderLeftStyle", "borderRightStyle", "borderBottomStyle", "borderTopStyle" ],
-	function( _, prop ) {
-		$.fx.step[ prop ] = function( fx ) {
-			if ( fx.end !== "none" && !fx.setAttr || fx.pos === 1 && !fx.setAttr ) {
-				jQuery.style( fx.elem, prop, fx.end );
-				fx.setAttr = true;
-			}
-		};
-	}
-);
-
-function getElementStyles( elem ) {
-	var key, len,
-		style = elem.ownerDocument.defaultView ?
-			elem.ownerDocument.defaultView.getComputedStyle( elem, null ) :
-			elem.currentStyle,
-		styles = {};
-
-	if ( style && style.length && style[ 0 ] && style[ style[ 0 ] ] ) {
-		len = style.length;
-		while ( len-- ) {
-			key = style[ len ];
-			if ( typeof style[ key ] === "string" ) {
-				styles[ $.camelCase( key ) ] = style[ key ];
-			}
-		}
-
-	// Support: Opera, IE <9
-	} else {
-		for ( key in style ) {
-			if ( typeof style[ key ] === "string" ) {
-				styles[ key ] = style[ key ];
-			}
-		}
-	}
-
-	return styles;
-}
-
-function styleDifference( oldStyle, newStyle ) {
-	var diff = {},
-		name, value;
-
-	for ( name in newStyle ) {
-		value = newStyle[ name ];
-		if ( oldStyle[ name ] !== value ) {
-			if ( !shorthandStyles[ name ] ) {
-				if ( $.fx.step[ name ] || !isNaN( parseFloat( value ) ) ) {
-					diff[ name ] = value;
-				}
-			}
-		}
-	}
-
-	return diff;
-}
 
 // Support: jQuery <1.8
 if ( !$.fn.addBack ) {
@@ -13485,7 +11491,7 @@ if ( !$.fn.addBack ) {
 	};
 }
 
-$.effects.animateClass = function( value, duration, easing, callback ) {
+function animateClass( value, duration, easing, callback ) {
 	var o = $.speed( duration, easing, callback );
 
 	return this.queue( function() {
@@ -13564,7 +11570,7 @@ $.fn.extend( {
 	addClass: ( function( orig ) {
 		return function( classNames, speed, easing, callback ) {
 			return speed ?
-				$.effects.animateClass.call( this,
+				animateClass.call( this,
 					{ add: classNames }, speed, easing, callback ) :
 				orig.apply( this, arguments );
 		};
@@ -13573,7 +11579,7 @@ $.fn.extend( {
 	removeClass: ( function( orig ) {
 		return function( classNames, speed, easing, callback ) {
 			return arguments.length > 1 ?
-				$.effects.animateClass.call( this,
+				animateClass.call( this,
 					{ remove: classNames }, speed, easing, callback ) :
 				orig.apply( this, arguments );
 		};
@@ -13587,796 +11593,94 @@ $.fn.extend( {
 					// Without speed parameter
 					return orig.apply( this, arguments );
 				} else {
-					return $.effects.animateClass.call( this,
+					return animateClass.call( this,
 						( force ? { add: classNames } : { remove: classNames } ),
 						speed, easing, callback );
 				}
 			} else {
 
 				// Without force parameter
-				return $.effects.animateClass.call( this,
+				return animateClass.call( this,
 					{ toggle: classNames }, force, speed, easing );
 			}
 		};
 	} )( $.fn.toggleClass ),
 
 	switchClass: function( remove, add, speed, easing, callback ) {
-		return $.effects.animateClass.call( this, {
+		return animateClass.call( this, {
 			add: add,
 			remove: remove
 		}, speed, easing, callback );
 	}
 } );
 
-} )();
-
-/******************************************************************************/
-/*********************************** EFFECTS **********************************/
-/******************************************************************************/
-
-( function() {
-
-if ( $.expr && $.expr.filters && $.expr.filters.animated ) {
-	$.expr.filters.animated = ( function( orig ) {
-		return function( elem ) {
-			return !!$( elem ).data( dataSpaceAnimated ) || orig( elem );
-		};
-	} )( $.expr.filters.animated );
-}
-
-if ( $.uiBackCompat !== false ) {
-	$.extend( $.effects, {
-
-		// Saves a set of properties in a data storage
-		save: function( element, set ) {
-			var i = 0, length = set.length;
-			for ( ; i < length; i++ ) {
-				if ( set[ i ] !== null ) {
-					element.data( dataSpace + set[ i ], element[ 0 ].style[ set[ i ] ] );
-				}
-			}
-		},
-
-		// Restores a set of previously saved properties from a data storage
-		restore: function( element, set ) {
-			var val, i = 0, length = set.length;
-			for ( ; i < length; i++ ) {
-				if ( set[ i ] !== null ) {
-					val = element.data( dataSpace + set[ i ] );
-					element.css( set[ i ], val );
-				}
-			}
-		},
-
-		setMode: function( el, mode ) {
-			if ( mode === "toggle" ) {
-				mode = el.is( ":hidden" ) ? "show" : "hide";
-			}
-			return mode;
-		},
-
-		// Wraps the element around a wrapper that copies position properties
-		createWrapper: function( element ) {
-
-			// If the element is already wrapped, return it
-			if ( element.parent().is( ".ui-effects-wrapper" ) ) {
-				return element.parent();
-			}
-
-			// Wrap the element
-			var props = {
-					width: element.outerWidth( true ),
-					height: element.outerHeight( true ),
-					"float": element.css( "float" )
-				},
-				wrapper = $( "<div></div>" )
-					.addClass( "ui-effects-wrapper" )
-					.css( {
-						fontSize: "100%",
-						background: "transparent",
-						border: "none",
-						margin: 0,
-						padding: 0
-					} ),
-
-				// Store the size in case width/height are defined in % - Fixes #5245
-				size = {
-					width: element.width(),
-					height: element.height()
-				},
-				active = document.activeElement;
-
-			// Support: Firefox
-			// Firefox incorrectly exposes anonymous content
-			// https://bugzilla.mozilla.org/show_bug.cgi?id=561664
-			try {
-				active.id;
-			} catch ( e ) {
-				active = document.body;
-			}
-
-			element.wrap( wrapper );
-
-			// Fixes #7595 - Elements lose focus when wrapped.
-			if ( element[ 0 ] === active || $.contains( element[ 0 ], active ) ) {
-				$( active ).trigger( "focus" );
-			}
-
-			// Hotfix for jQuery 1.4 since some change in wrap() seems to actually
-			// lose the reference to the wrapped element
-			wrapper = element.parent();
-
-			// Transfer positioning properties to the wrapper
-			if ( element.css( "position" ) === "static" ) {
-				wrapper.css( { position: "relative" } );
-				element.css( { position: "relative" } );
-			} else {
-				$.extend( props, {
-					position: element.css( "position" ),
-					zIndex: element.css( "z-index" )
-				} );
-				$.each( [ "top", "left", "bottom", "right" ], function( i, pos ) {
-					props[ pos ] = element.css( pos );
-					if ( isNaN( parseInt( props[ pos ], 10 ) ) ) {
-						props[ pos ] = "auto";
-					}
-				} );
-				element.css( {
-					position: "relative",
-					top: 0,
-					left: 0,
-					right: "auto",
-					bottom: "auto"
-				} );
-			}
-			element.css( size );
-
-			return wrapper.css( props ).show();
-		},
-
-		removeWrapper: function( element ) {
-			var active = document.activeElement;
-
-			if ( element.parent().is( ".ui-effects-wrapper" ) ) {
-				element.parent().replaceWith( element );
-
-				// Fixes #7595 - Elements lose focus when wrapped.
-				if ( element[ 0 ] === active || $.contains( element[ 0 ], active ) ) {
-					$( active ).trigger( "focus" );
-				}
-			}
-
-			return element;
-		}
-	} );
-}
-
-$.extend( $.effects, {
-	version: "1.12.1",
-
-	define: function( name, mode, effect ) {
-		if ( !effect ) {
-			effect = mode;
-			mode = "effect";
-		}
-
-		$.effects.effect[ name ] = effect;
-		$.effects.effect[ name ].mode = mode;
-
-		return effect;
-	},
-
-	scaledDimensions: function( element, percent, direction ) {
-		if ( percent === 0 ) {
-			return {
-				height: 0,
-				width: 0,
-				outerHeight: 0,
-				outerWidth: 0
-			};
-		}
-
-		var x = direction !== "horizontal" ? ( ( percent || 100 ) / 100 ) : 1,
-			y = direction !== "vertical" ? ( ( percent || 100 ) / 100 ) : 1;
-
-		return {
-			height: element.height() * y,
-			width: element.width() * x,
-			outerHeight: element.outerHeight() * y,
-			outerWidth: element.outerWidth() * x
-		};
-
-	},
-
-	clipToBox: function( animation ) {
-		return {
-			width: animation.clip.right - animation.clip.left,
-			height: animation.clip.bottom - animation.clip.top,
-			left: animation.clip.left,
-			top: animation.clip.top
-		};
-	},
-
-	// Injects recently queued functions to be first in line (after "inprogress")
-	unshift: function( element, queueLength, count ) {
-		var queue = element.queue();
-
-		if ( queueLength > 1 ) {
-			queue.splice.apply( queue,
-				[ 1, 0 ].concat( queue.splice( queueLength, count ) ) );
-		}
-		element.dequeue();
-	},
-
-	saveStyle: function( element ) {
-		element.data( dataSpaceStyle, element[ 0 ].style.cssText );
-	},
-
-	restoreStyle: function( element ) {
-		element[ 0 ].style.cssText = element.data( dataSpaceStyle ) || "";
-		element.removeData( dataSpaceStyle );
-	},
-
-	mode: function( element, mode ) {
-		var hidden = element.is( ":hidden" );
-
-		if ( mode === "toggle" ) {
-			mode = hidden ? "show" : "hide";
-		}
-		if ( hidden ? mode === "hide" : mode === "show" ) {
-			mode = "none";
-		}
-		return mode;
-	},
-
-	// Translates a [top,left] array into a baseline value
-	getBaseline: function( origin, original ) {
-		var y, x;
-
-		switch ( origin[ 0 ] ) {
-		case "top":
-			y = 0;
-			break;
-		case "middle":
-			y = 0.5;
-			break;
-		case "bottom":
-			y = 1;
-			break;
-		default:
-			y = origin[ 0 ] / original.height;
-		}
-
-		switch ( origin[ 1 ] ) {
-		case "left":
-			x = 0;
-			break;
-		case "center":
-			x = 0.5;
-			break;
-		case "right":
-			x = 1;
-			break;
-		default:
-			x = origin[ 1 ] / original.width;
-		}
-
-		return {
-			x: x,
-			y: y
-		};
-	},
-
-	// Creates a placeholder element so that the original element can be made absolute
-	createPlaceholder: function( element ) {
-		var placeholder,
-			cssPosition = element.css( "position" ),
-			position = element.position();
-
-		// Lock in margins first to account for form elements, which
-		// will change margin if you explicitly set height
-		// see: http://jsfiddle.net/JZSMt/3/ https://bugs.webkit.org/show_bug.cgi?id=107380
-		// Support: Safari
-		element.css( {
-			marginTop: element.css( "marginTop" ),
-			marginBottom: element.css( "marginBottom" ),
-			marginLeft: element.css( "marginLeft" ),
-			marginRight: element.css( "marginRight" )
-		} )
-		.outerWidth( element.outerWidth() )
-		.outerHeight( element.outerHeight() );
-
-		if ( /^(static|relative)/.test( cssPosition ) ) {
-			cssPosition = "absolute";
-
-			placeholder = $( "<" + element[ 0 ].nodeName + ">" ).insertAfter( element ).css( {
-
-				// Convert inline to inline block to account for inline elements
-				// that turn to inline block based on content (like img)
-				display: /^(inline|ruby)/.test( element.css( "display" ) ) ?
-					"inline-block" :
-					"block",
-				visibility: "hidden",
-
-				// Margins need to be set to account for margin collapse
-				marginTop: element.css( "marginTop" ),
-				marginBottom: element.css( "marginBottom" ),
-				marginLeft: element.css( "marginLeft" ),
-				marginRight: element.css( "marginRight" ),
-				"float": element.css( "float" )
-			} )
-			.outerWidth( element.outerWidth() )
-			.outerHeight( element.outerHeight() )
-			.addClass( "ui-effects-placeholder" );
-
-			element.data( dataSpace + "placeholder", placeholder );
-		}
-
-		element.css( {
-			position: cssPosition,
-			left: position.left,
-			top: position.top
-		} );
-
-		return placeholder;
-	},
-
-	removePlaceholder: function( element ) {
-		var dataKey = dataSpace + "placeholder",
-				placeholder = element.data( dataKey );
-
-		if ( placeholder ) {
-			placeholder.remove();
-			element.removeData( dataKey );
-		}
-	},
-
-	// Removes a placeholder if it exists and restores
-	// properties that were modified during placeholder creation
-	cleanUp: function( element ) {
-		$.effects.restoreStyle( element );
-		$.effects.removePlaceholder( element );
-	},
-
-	setTransition: function( element, list, factor, value ) {
-		value = value || {};
-		$.each( list, function( i, x ) {
-			var unit = element.cssUnit( x );
-			if ( unit[ 0 ] > 0 ) {
-				value[ x ] = unit[ 0 ] * factor + unit[ 1 ];
-			}
-		} );
-		return value;
-	}
-} );
-
-// Return an effect options object for the given parameters:
-function _normalizeArguments( effect, options, speed, callback ) {
-
-	// Allow passing all options as the first parameter
-	if ( $.isPlainObject( effect ) ) {
-		options = effect;
-		effect = effect.effect;
-	}
-
-	// Convert to an object
-	effect = { effect: effect };
-
-	// Catch (effect, null, ...)
-	if ( options == null ) {
-		options = {};
-	}
-
-	// Catch (effect, callback)
-	if ( $.isFunction( options ) ) {
-		callback = options;
-		speed = null;
-		options = {};
-	}
-
-	// Catch (effect, speed, ?)
-	if ( typeof options === "number" || $.fx.speeds[ options ] ) {
-		callback = speed;
-		speed = options;
-		options = {};
-	}
-
-	// Catch (effect, options, callback)
-	if ( $.isFunction( speed ) ) {
-		callback = speed;
-		speed = null;
-	}
-
-	// Add options to effect
-	if ( options ) {
-		$.extend( effect, options );
-	}
-
-	speed = speed || options.duration;
-	effect.duration = $.fx.off ? 0 :
-		typeof speed === "number" ? speed :
-		speed in $.fx.speeds ? $.fx.speeds[ speed ] :
-		$.fx.speeds._default;
-
-	effect.complete = callback || options.complete;
-
-	return effect;
-}
-
-function standardAnimationOption( option ) {
-
-	// Valid standard speeds (nothing, number, named speed)
-	if ( !option || typeof option === "number" || $.fx.speeds[ option ] ) {
-		return true;
-	}
-
-	// Invalid strings - treat as "normal" speed
-	if ( typeof option === "string" && !$.effects.effect[ option ] ) {
-		return true;
-	}
-
-	// Complete callback
-	if ( $.isFunction( option ) ) {
-		return true;
-	}
-
-	// Options hash (but not naming an effect)
-	if ( typeof option === "object" && !option.effect ) {
-		return true;
-	}
-
-	// Didn't match any standard API
-	return false;
-}
-
-$.fn.extend( {
-	effect: function( /* effect, options, speed, callback */ ) {
-		var args = _normalizeArguments.apply( this, arguments ),
-			effectMethod = $.effects.effect[ args.effect ],
-			defaultMode = effectMethod.mode,
-			queue = args.queue,
-			queueName = queue || "fx",
-			complete = args.complete,
-			mode = args.mode,
-			modes = [],
-			prefilter = function( next ) {
-				var el = $( this ),
-					normalizedMode = $.effects.mode( el, mode ) || defaultMode;
-
-				// Sentinel for duck-punching the :animated psuedo-selector
-				el.data( dataSpaceAnimated, true );
-
-				// Save effect mode for later use,
-				// we can't just call $.effects.mode again later,
-				// as the .show() below destroys the initial state
-				modes.push( normalizedMode );
-
-				// See $.uiBackCompat inside of run() for removal of defaultMode in 1.13
-				if ( defaultMode && ( normalizedMode === "show" ||
-						( normalizedMode === defaultMode && normalizedMode === "hide" ) ) ) {
-					el.show();
-				}
-
-				if ( !defaultMode || normalizedMode !== "none" ) {
-					$.effects.saveStyle( el );
-				}
-
-				if ( $.isFunction( next ) ) {
-					next();
-				}
-			};
-
-		if ( $.fx.off || !effectMethod ) {
-
-			// Delegate to the original method (e.g., .show()) if possible
-			if ( mode ) {
-				return this[ mode ]( args.duration, complete );
-			} else {
-				return this.each( function() {
-					if ( complete ) {
-						complete.call( this );
-					}
-				} );
-			}
-		}
-
-		function run( next ) {
-			var elem = $( this );
-
-			function cleanup() {
-				elem.removeData( dataSpaceAnimated );
-
-				$.effects.cleanUp( elem );
-
-				if ( args.mode === "hide" ) {
-					elem.hide();
-				}
-
-				done();
-			}
-
-			function done() {
-				if ( $.isFunction( complete ) ) {
-					complete.call( elem[ 0 ] );
-				}
-
-				if ( $.isFunction( next ) ) {
-					next();
-				}
-			}
-
-			// Override mode option on a per element basis,
-			// as toggle can be either show or hide depending on element state
-			args.mode = modes.shift();
-
-			if ( $.uiBackCompat !== false && !defaultMode ) {
-				if ( elem.is( ":hidden" ) ? mode === "hide" : mode === "show" ) {
-
-					// Call the core method to track "olddisplay" properly
-					elem[ mode ]();
-					done();
-				} else {
-					effectMethod.call( elem[ 0 ], args, done );
-				}
-			} else {
-				if ( args.mode === "none" ) {
-
-					// Call the core method to track "olddisplay" properly
-					elem[ mode ]();
-					done();
-				} else {
-					effectMethod.call( elem[ 0 ], args, cleanup );
-				}
-			}
-		}
-
-		// Run prefilter on all elements first to ensure that
-		// any showing or hiding happens before placeholder creation,
-		// which ensures that any layout changes are correctly captured.
-		return queue === false ?
-			this.each( prefilter ).each( run ) :
-			this.queue( queueName, prefilter ).queue( queueName, run );
-	},
-
-	show: ( function( orig ) {
-		return function( option ) {
-			if ( standardAnimationOption( option ) ) {
-				return orig.apply( this, arguments );
-			} else {
-				var args = _normalizeArguments.apply( this, arguments );
-				args.mode = "show";
-				return this.effect.call( this, args );
-			}
-		};
-	} )( $.fn.show ),
-
-	hide: ( function( orig ) {
-		return function( option ) {
-			if ( standardAnimationOption( option ) ) {
-				return orig.apply( this, arguments );
-			} else {
-				var args = _normalizeArguments.apply( this, arguments );
-				args.mode = "hide";
-				return this.effect.call( this, args );
-			}
-		};
-	} )( $.fn.hide ),
-
-	toggle: ( function( orig ) {
-		return function( option ) {
-			if ( standardAnimationOption( option ) || typeof option === "boolean" ) {
-				return orig.apply( this, arguments );
-			} else {
-				var args = _normalizeArguments.apply( this, arguments );
-				args.mode = "toggle";
-				return this.effect.call( this, args );
-			}
-		};
-	} )( $.fn.toggle ),
-
-	cssUnit: function( key ) {
-		var style = this.css( key ),
-			val = [];
-
-		$.each( [ "em", "px", "%", "pt" ], function( i, unit ) {
-			if ( style.indexOf( unit ) > 0 ) {
-				val = [ parseFloat( style ), unit ];
-			}
-		} );
-		return val;
-	},
-
-	cssClip: function( clipObj ) {
-		if ( clipObj ) {
-			return this.css( "clip", "rect(" + clipObj.top + "px " + clipObj.right + "px " +
-				clipObj.bottom + "px " + clipObj.left + "px)" );
-		}
-		return parseClip( this.css( "clip" ), this );
-	},
-
-	transfer: function( options, done ) {
-		var element = $( this ),
-			target = $( options.to ),
-			targetFixed = target.css( "position" ) === "fixed",
-			body = $( "body" ),
-			fixTop = targetFixed ? body.scrollTop() : 0,
-			fixLeft = targetFixed ? body.scrollLeft() : 0,
-			endPosition = target.offset(),
-			animation = {
-				top: endPosition.top - fixTop,
-				left: endPosition.left - fixLeft,
-				height: target.innerHeight(),
-				width: target.innerWidth()
-			},
-			startPosition = element.offset(),
-			transfer = $( "<div class='ui-effects-transfer'></div>" )
-				.appendTo( "body" )
-				.addClass( options.className )
-				.css( {
-					top: startPosition.top - fixTop,
-					left: startPosition.left - fixLeft,
-					height: element.innerHeight(),
-					width: element.innerWidth(),
-					position: targetFixed ? "fixed" : "absolute"
-				} )
-				.animate( animation, options.duration, options.easing, function() {
-					transfer.remove();
-					if ( $.isFunction( done ) ) {
-						done();
-					}
-				} );
-	}
-} );
-
-function parseClip( str, element ) {
-		var outerWidth = element.outerWidth(),
-			outerHeight = element.outerHeight(),
-			clipRegex = /^rect\((-?\d*\.?\d*px|-?\d+%|auto),?\s*(-?\d*\.?\d*px|-?\d+%|auto),?\s*(-?\d*\.?\d*px|-?\d+%|auto),?\s*(-?\d*\.?\d*px|-?\d+%|auto)\)$/,
-			values = clipRegex.exec( str ) || [ "", 0, outerWidth, outerHeight, 0 ];
-
-		return {
-			top: parseFloat( values[ 1 ] ) || 0,
-			right: values[ 2 ] === "auto" ? outerWidth : parseFloat( values[ 2 ] ),
-			bottom: values[ 3 ] === "auto" ? outerHeight : parseFloat( values[ 3 ] ),
-			left: parseFloat( values[ 4 ] ) || 0
-		};
-}
-
-$.fx.step.clip = function( fx ) {
-	if ( !fx.clipInit ) {
-		fx.start = $( fx.elem ).cssClip();
-		if ( typeof fx.end === "string" ) {
-			fx.end = parseClip( fx.end, fx.elem );
-		}
-		fx.clipInit = true;
-	}
-
-	$( fx.elem ).cssClip( {
-		top: fx.pos * ( fx.end.top - fx.start.top ) + fx.start.top,
-		right: fx.pos * ( fx.end.right - fx.start.right ) + fx.start.right,
-		bottom: fx.pos * ( fx.end.bottom - fx.start.bottom ) + fx.start.bottom,
-		left: fx.pos * ( fx.end.left - fx.start.left ) + fx.start.left
-	} );
-};
-
-} )();
-
-/******************************************************************************/
-/*********************************** EASING ***********************************/
-/******************************************************************************/
-
-( function() {
-
-// Based on easing equations from Robert Penner (http://www.robertpenner.com/easing)
-
-var baseEasings = {};
-
-$.each( [ "Quad", "Cubic", "Quart", "Quint", "Expo" ], function( i, name ) {
-	baseEasings[ name ] = function( p ) {
-		return Math.pow( p, i + 2 );
-	};
-} );
-
-$.extend( baseEasings, {
-	Sine: function( p ) {
-		return 1 - Math.cos( p * Math.PI / 2 );
-	},
-	Circ: function( p ) {
-		return 1 - Math.sqrt( 1 - p * p );
-	},
-	Elastic: function( p ) {
-		return p === 0 || p === 1 ? p :
-			-Math.pow( 2, 8 * ( p - 1 ) ) * Math.sin( ( ( p - 1 ) * 80 - 7.5 ) * Math.PI / 15 );
-	},
-	Back: function( p ) {
-		return p * p * ( 3 * p - 2 );
-	},
-	Bounce: function( p ) {
-		var pow2,
-			bounce = 4;
-
-		while ( p < ( ( pow2 = Math.pow( 2, --bounce ) ) - 1 ) / 11 ) {}
-		return 1 / Math.pow( 4, 3 - bounce ) - 7.5625 * Math.pow( ( pow2 * 3 - 2 ) / 22 - p, 2 );
-	}
-} );
-
-$.each( baseEasings, function( name, easeIn ) {
-	$.easing[ "easeIn" + name ] = easeIn;
-	$.easing[ "easeOut" + name ] = function( p ) {
-		return 1 - easeIn( 1 - p );
-	};
-	$.easing[ "easeInOut" + name ] = function( p ) {
-		return p < 0.5 ?
-			easeIn( p * 2 ) / 2 :
-			1 - easeIn( p * -2 + 2 ) / 2;
-	};
-} );
-
-} )();
-
-var effect = $.effects;
-
-
-/*!
- * jQuery UI Effects Shake 1.12.1
- * http://jqueryui.com
- *
- * Copyright jQuery Foundation and other contributors
- * Released under the MIT license.
- * http://jquery.org/license
- */
-
-//>>label: Shake Effect
-//>>group: Effects
-//>>description: Shakes an element horizontally or vertically n times.
-//>>docs: http://api.jqueryui.com/shake-effect/
-//>>demos: http://jqueryui.com/effect/
-
-
-
-var effectsEffectShake = $.effects.define( "shake", function( options, done ) {
-
-	var i = 1,
-		element = $( this ),
-		direction = options.direction || "left",
-		distance = options.distance || 20,
-		times = options.times || 3,
-		anims = times * 2 + 1,
-		speed = Math.round( options.duration / anims ),
-		ref = ( direction === "up" || direction === "down" ) ? "top" : "left",
-		positiveMotion = ( direction === "up" || direction === "left" ),
-		animation = {},
-		animation1 = {},
-		animation2 = {},
-
-		queuelen = element.queue().length;
-
-	$.effects.createPlaceholder( element );
-
-	// Animation
-	animation[ ref ] = ( positiveMotion ? "-=" : "+=" ) + distance;
-	animation1[ ref ] = ( positiveMotion ? "+=" : "-=" ) + distance * 2;
-	animation2[ ref ] = ( positiveMotion ? "-=" : "+=" ) + distance * 2;
-
-	// Animate
-	element.animate( animation, speed, options.easing );
-
-	// Shakes
-	for ( ; i < times; i++ ) {
-		element
-			.animate( animation1, speed, options.easing )
-			.animate( animation2, speed, options.easing );
-	}
-
-	element
-		.animate( animation1, speed, options.easing )
-		.animate( animation, speed / 2, options.easing )
-		.queue( done );
-
-	$.effects.unshift( element, queuelen, anims + 1 );
-} );
-
-
-
 
 }));
+
+(function($){
+  $.support.touch = true; // typeof Touch === 'object';
+
+  if (!$.support.touch){
+    return;
+  }
+
+  var proto =  $.ui.mouse.prototype,
+  _mouseInit = proto._mouseInit;
+
+  $.extend(proto, {
+    _getElementToBind: function(){
+      var el = this.element;
+      if(this.widgetName == "sortable"){
+        console.log
+      }
+      return el;
+    },
+
+    _mouseInit: function(){
+      this._getElementToBind().bind("touchstart." + this.widgetName, $.proxy(this, "_touchStart"));
+      _mouseInit.apply(this, arguments);
+    },
+
+    _touchStart: function(event){
+      if (event.originalEvent.targetTouches.length != 1){
+        return false;
+      }
+
+      if(!this._mouseCapture(event, false)){ // protects things like the "handle" option on sortable
+        return true;
+      }
+
+      this.element
+        .bind("touchmove." + this.widgetName, $.proxy(this, "_touchMove"))
+        .bind("touchend." + this.widgetName, $.proxy(this, "_touchEnd"));
+
+      this._modifyEvent(event);
+
+      $(document).trigger($.Event("mouseup")); // reset mouseHandled flag in ui.mouse
+      this._mouseDown(event);
+
+      return false;
+    },
+
+    _touchMove: function(event){
+      this._modifyEvent(event);
+      this._mouseMove(event);
+    },
+
+    _touchEnd: function(event){
+      this.element
+        .unbind("touchmove." + this.widgetName)
+        .unbind("touchend." + this.widgetName);
+      this._mouseUp(event);
+    },
+
+    _modifyEvent: function(event){
+      event.which = 1;
+      var target = event.originalEvent.targetTouches[0];
+      event.pageX = target.clientX;
+      event.pageY = target.clientY;
+    }
+
+  });
+
+})(jQuery);

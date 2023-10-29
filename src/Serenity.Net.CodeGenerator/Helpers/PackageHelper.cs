@@ -1,24 +1,21 @@
-﻿using System.IO.Abstractions;
+﻿namespace Serenity.CodeGenerator;
 
-namespace Serenity.CodeGenerator
+public class PackageHelper
 {
-    public class PackageHelper
+    public static string DeterminePackagesPath(IGeneratorFileSystem fileSystem)
     {
-        public static string DeterminePackagesPath(IFileSystem fileSystem)
+        string userHomeDirectory = Environment.GetEnvironmentVariable("HOME");
+        if (string.IsNullOrEmpty(userHomeDirectory))
+            userHomeDirectory = Environment.GetEnvironmentVariable("USERPROFILE");
+
+        var packagesDir = fileSystem.Combine(userHomeDirectory, ".nuget", "packages");
+
+        if (!fileSystem.DirectoryExists(packagesDir))
         {
-            string userHomeDirectory = Environment.GetEnvironmentVariable("HOME");
-            if (string.IsNullOrEmpty(userHomeDirectory))
-                userHomeDirectory = Environment.GetEnvironmentVariable("USERPROFILE");
-
-            var packagesDir = fileSystem.Path.Combine(userHomeDirectory, ".nuget", "packages");
-
-            if (!fileSystem.Directory.Exists(packagesDir))
-            {
-                Console.Error.WriteLine("Can't determine NuGet packages directory!");
-                return null;
-            }
-
-            return packagesDir;
+            Console.Error.WriteLine("Can't determine NuGet packages directory!");
+            return null;
         }
+
+        return packagesDir;
     }
 }

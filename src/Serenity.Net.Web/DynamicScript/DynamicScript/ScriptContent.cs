@@ -1,71 +1,132 @@
-﻿using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.AspNetCore.WebUtilities;
 using System.IO;
 using System.IO.Compression;
 using System.Security.Cryptography;
 
-namespace Serenity.Web
+namespace Serenity.Web;
+
+/// <summary>
+/// Default implementation for <see cref="IScriptContent"/>
+/// </summary>
+public class ScriptContent : IScriptContent
 {
-    public class ScriptContent : IScriptContent
+    private readonly CompressionLevel compressionLevel;
+    private string hash;
+    private readonly byte[] content;
+    private byte[] gzipContent;
+    private byte[] brotliContent;
+
+    /// <summary>
+    /// Creates a new instance of the class
+    /// </summary>
+    /// <param name="content">Content</param>
+    /// <param name="time">Time</param>
+    /// <param name="compressionLevel">Suggested compression level</param>
+    /// <exception cref="ArgumentNullException"></exception>
+    public ScriptContent(byte[] content, DateTime time, CompressionLevel compressionLevel)
     {
-        private readonly bool canCompress;
-        private string hash;
-        private readonly byte[] content;
-        private byte[] compressedContent;
+        this.content = content ?? throw new ArgumentNullException(nameof(content));
+        this.compressionLevel = compressionLevel;
+        Time = time;
+    }
 
-        public ScriptContent(byte[] content, DateTime time, bool canCompress)
+    /// <summary>
+    /// Gets script generated time
+    /// </summary>
+    public DateTime Time { get; private set; }
+
+    /// <summary>
+    /// Gets script hash
+    /// </summary>
+    public string Hash 
+    { 
+        get
         {
-            this.content = content ?? throw new ArgumentNullException(nameof(content));
-            this.canCompress = canCompress;
-            Time = time;
-        }
-
-        /// <summary>
-        /// Gets script generated time
-        /// </summary>
-        public DateTime Time { get; private set; }
-
-        /// <summary>
-        /// Gets script hash
-        /// </summary>
-        public string Hash 
-        { 
-            get
+            if (hash == null)
             {
-                if (hash == null)
+                var md5 = MD5.Create();
+                byte[] result = md5.ComputeHash(content);
+                hash = WebEncoders.Base64UrlEncode(result);
+            }
+
+            return hash;
+        }
+    }
+
+    /// <inheritdoc/>
+    public byte[] Content => content;
+
+    /// <inheritdoc/>
+    public bool CanCompress => compressionLevel != CompressionLevel.NoCompression;
+
+    /// <inheritdoc/>
+    public byte[] CompressedContent
+    {
+        get
+        {
+            if (!CanCompress)
+                throw new InvalidOperationException("Script does not allow compression!");
+
+            if (gzipContent == null)
+            {
+                using var cs = new MemoryStream(content.Length);
+                using (var gz = new GZipStream(cs, compressionLevel))
                 {
-                    var md5 = MD5.Create();
-                    byte[] result = md5.ComputeHash(content);
-                    hash = WebEncoders.Base64UrlEncode(result);
+                    gz.Write(content, 0, content.Length);
+                    gz.Flush();
                 }
 
-                return hash;
+                gzipContent = cs.ToArray();
             }
+
+            return gzipContent;
         }
+    }
 
-        public byte[] Content => content;
-        public bool CanCompress => canCompress;
-        
-        public byte[] CompressedContent
+    /// <inheritdoc/>
+    public byte[] BrotliContent
+    {
+        get
         {
-            get
-            {
-                if (!canCompress)
-                    throw new InvalidOperationException("Script does not allow compression!");
+            if (!CanCompress)
+                throw new InvalidOperationException("Script does not allow compression!");
 
-                if (compressedContent == null)
+            if (brotliContent == null)
+            {
+                CompressionLevel brotliLevel;
+                if (Environment.Version.Major >= 7)
                 {
-                    using var cs = new MemoryStream(content.Length);
-                    using (var gz = new GZipStream(cs, CompressionMode.Compress))
+                    // .NET 7 does not allow custom levels
+                    brotliLevel = compressionLevel switch
                     {
-                        gz.Write(content, 0, content.Length);
-                        gz.Flush();
-                    }
-
-                    compressedContent = cs.ToArray();
+                        CompressionLevel.Optimal => CompressionLevel.Optimal,
+                        // CompressionLevel.SmallestSize is too slow with Brotli
+                        CompressionLevel.SmallestSize => CompressionLevel.Optimal, 
+                        _ => CompressionLevel.Fastest
+                    };
+                }
+                else
+                {
+                    brotliLevel = compressionLevel switch
+                    {
+                        CompressionLevel.Optimal => (CompressionLevel)4,
+                        // level 5-9 almost same compression, and 10+ is much slower
+                        CompressionLevel.SmallestSize => (CompressionLevel)5,
+                        _ => (CompressionLevel)1
+                    };
                 }
 
-                return compressedContent;
+                using var cs = new MemoryStream(content.Length);
+                using (var br = new BrotliStream(cs, brotliLevel))
+                {
+                    br.Write(content, 0, content.Length);
+                    br.Flush();
+                }
+
+                brotliContent = cs.ToArray();
             }
+
+            return brotliContent;
         }
     }
 }

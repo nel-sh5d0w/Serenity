@@ -1934,7 +1934,7 @@ s.-Panel .tab-pane {
   min-height: 43px;
   margin-bottom: 0;
 }
-.full-height-page section.content {
+section.content {
   display: flex;
   flex-direction: column;
 }
@@ -2391,9 +2391,10 @@ div.s-Toolbar .s-PopupToolButton .button-outer > span > b {
     -ms-flex-preferred-size: auto;
   }
 }
-body.mobile-device.modal-dialog-open,
-.mobile-device body.modal-dialog-open {
+@media (max-width: 767px) {
+  body.modal-dialog-open {
     overflow-y: hidden;
+  }
 }
 .ui-dialog.mobile-layout {
   box-shadow: none;
@@ -2533,7 +2534,6 @@ body.mobile-device.modal-dialog-open,
   display: inline-block;
   padding-left: 22px;
   min-height: 20px;
-  background: url(images/arrow-down.png) no-repeat left 1px;
   opacity: 0.5;
   cursor: pointer;
 }
@@ -3040,7 +3040,6 @@ img.ui-datepicker-trigger {
   display: inline-block;
   height: 26px;
   width: 24px;
-  float: left;
   margin-left: 2px;
   border: 1px solid #aaa;
   border-radius: 4px 4px 4px 4px;
@@ -3301,7 +3300,6 @@ a.s-LinkDropDown input {
 }
 .s-QuickSearchBar .quick-search-icon {
   display: inline-block;
-  float: left;
   padding: 0 0 0 8px;
   border-radius: 5px 0 0 5px;
   background: #0090d9;

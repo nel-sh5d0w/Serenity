@@ -1,169 +1,151 @@
-﻿using System.Diagnostics;
-using System.IO;
+using System.Diagnostics;
 
-namespace Serenity.CodeGenerator
+namespace Serenity.CodeGenerator;
+
+public class CodeFileHelper : ICodeFileHelper
 {
-    public class CodeFileHelper
+    private static readonly Encoding utf8 = new UTF8Encoding(true);
+    private readonly IGeneratorFileSystem fileSystem;
+
+    public string Kdiff3Path { get; set; }
+    public string TSCPath { get; set; }
+    public bool NoUserInteraction { get; set; }
+
+    private bool? overwriteAll;
+
+    public static byte[] ToUTF8BOM(string s)
     {
-        private static readonly Encoding utf8 = new UTF8Encoding(true);
-        public static string Kdiff3Path { get; set; }
-        public static string TSCPath { get; set; }
-        public static bool TFSIntegration { get; set; }
-        public static bool? Overwrite { get; set; }
+        return Encoding.UTF8.GetPreamble().Concat(utf8.GetBytes(s)).ToArray();
+    }
 
-        public static byte[] ToUTF8BOM(string s)
+    public CodeFileHelper(IGeneratorFileSystem fileSystem)
+    {
+        this.fileSystem = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
+    }
+
+    public void CheckoutAndWrite(string file, string contents)
+    {
+        CheckoutAndWrite(file, ToUTF8BOM(contents));
+    }
+
+    public void CheckoutAndWrite(string file, byte[] contents)
+    {
+        fileSystem.WriteAllBytes(file, contents);
+    }
+
+    public bool FileContentsEqual(string file1, string file2)
+    {
+        var content1 = fileSystem.ReadAllText(file1, utf8);
+        var content2 = fileSystem.ReadAllText(file2, utf8);
+        return content1.Trim().Replace("\r", "", StringComparison.Ordinal) ==
+            content2.Trim().Replace("\r", "", StringComparison.Ordinal);
+    }
+
+    public void MergeChanges(string backup, string file)
+    {
+        if (backup == null || !fileSystem.FileExists(backup) || !fileSystem.FileExists(file))
+            return;
+
+        bool isEqual = FileContentsEqual(backup, file);
+
+        if (isEqual || NoUserInteraction)
         {
-            return Encoding.UTF8.GetPreamble().Concat(utf8.GetBytes(s)).ToArray();
+            CheckoutAndWrite(file, fileSystem.ReadAllBytes(backup));
+            fileSystem.DeleteFile(backup);
+            return;
         }
 
-#pragma warning disable IDE0060 // Remove unused parameter
-        public static void ExecuteTFCommand(string file, string command)
-#pragma warning restore IDE0060 // Remove unused parameter
+        if (!string.IsNullOrEmpty(Kdiff3Path) &&
+            !fileSystem.FileExists(Kdiff3Path))
         {
-        }
-
-        public static void CheckoutAndWrite(string file, string contents, bool addToSourceControl)
-        {
-            CheckoutAndWrite(file, ToUTF8BOM(contents), addToSourceControl);
-        }
-
-        public static void CheckoutAndWrite(string file, byte[] contents, bool addToSourceControl)
-        {
-            if (!File.Exists(file))
-            {
-                File.WriteAllBytes(file, contents);
-                if (addToSourceControl && TFSIntegration)
-                    ExecuteTFCommand(file, "add");
-                return;
-            }
-
-            var attr = File.GetAttributes(file);
-            if (attr.HasFlag(FileAttributes.ReadOnly) && TFSIntegration)
-            {
-                ExecuteTFCommand(file, "checkout");
-                attr = File.GetAttributes(file);
-            }
-
-            if (attr.HasFlag(FileAttributes.ReadOnly))
-            {
-                attr -= FileAttributes.ReadOnly;
-                File.SetAttributes(file, attr);
-            }
-
-            File.WriteAllBytes(file, contents);
-        }
-
-        public static bool FileContentsEqual(string file1, string file2)
-        {
-            var content1 = File.ReadAllText(file1, utf8);
-            var content2 = File.ReadAllText(file2, utf8);
-            return content1.Trim().Replace("\r", "", StringComparison.Ordinal) == content2.Trim().Replace("\r", "", StringComparison.Ordinal);
-        }
-
-        public static void MergeChanges(string backup, string file)
-        {
-            if (backup == null || !File.Exists(backup) || !File.Exists(file))
-                return;
-
-            bool isEqual = FileContentsEqual(backup, file);
-
-            if (isEqual)
-            {
-                CheckoutAndWrite(file, File.ReadAllBytes(backup), true);
-                File.Delete(backup);
-                return;
-            }
-
-            if (!Kdiff3Path.IsEmptyOrNull() &&
-                !File.Exists(Kdiff3Path))
-            {
-                if (Kdiff3Path.IsNullOrEmpty())
-                    throw new InvalidOperationException(
-                        "Couldn't locate KDiff3 utility which is required to merge changes. " +
-                        "Please install it, or if it is not installed to default location, " +
-                        "set its path in CodeGenerator.config file!");
-
-                throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture,
-                    "Couldn't locate KDiff3 utility at '{0}' which is required to merge changes. " +
+            if (string.IsNullOrEmpty(Kdiff3Path))
+                throw new InvalidOperationException(
+                    "Couldn't locate KDiff3 utility which is required to merge changes. " +
                     "Please install it, or if it is not installed to default location, " +
-                    "set its path in CodeGenerator.config file!", Kdiff3Path));
-            }
-            else if (!Kdiff3Path.IsEmptyOrNull())
+                    "set its path in CodeGenerator.config file!");
+
+            throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture,
+                "Couldn't locate KDiff3 utility at '{0}' which is required to merge changes. " +
+                "Please install it, or if it is not installed to default location, " +
+                "set its path in CodeGenerator.config file!", Kdiff3Path));
+        }
+        else if (!string.IsNullOrEmpty(Kdiff3Path))
+        {
+            var generated = fileSystem.ChangeExtension(file, fileSystem.GetExtension(file) + ".gen.bak");
+            CheckoutAndWrite(generated, fileSystem.ReadAllBytes(file));
+            CheckoutAndWrite(file, fileSystem.ReadAllBytes(backup));
+            Process.Start(Kdiff3Path, "--auto \"" + file + "\" \"" + generated + "\" -o \"" + file + "\"");
+        }
+        else
+        {
+            string answer;
+            if (overwriteAll == true)
+                answer = "y";
+            else if (overwriteAll == false)
+                answer = "n";
+            else
             {
-                var generated = Path.ChangeExtension(file, Path.GetExtension(file) + ".gen.bak");
-                CheckoutAndWrite(generated, File.ReadAllBytes(file), false);
-                CheckoutAndWrite(file, File.ReadAllBytes(backup), true);
-                Process.Start(Kdiff3Path, "--auto \"" + file + "\" \"" + generated + "\" -o \"" + file + "\"");
+
+                while (true)
+                {
+                    Console.Write("Overwrite " + fileSystem.GetFileName(file) + "? ([Y]es, [N]o, Yes to [A]ll, [S]kip All): ");
+                    answer = Console.ReadLine();
+
+                    if (answer != null)
+                    {
+                        answer = answer.Length > 0 ? answer.ToLowerInvariant()[0].ToString() : " ";
+                        if (answer == "a")
+                        {
+                            overwriteAll = true;
+                            break;
+                        }
+                        else if (answer == "s")
+                        {
+                            overwriteAll = false;
+                            break;
+                        }
+                        else if (answer == "y" || answer == "n")
+                            break;
+                    }
+                }
+            }
+
+            if (answer == "y" || answer == "a")
+            {
+                fileSystem.DeleteFile(backup);
             }
             else
             {
-                string answer;
-                if (Overwrite == true)
-                    answer = "y";
-                else if (Overwrite == false)
-                    answer = "n";
-                else
-                {
-                    
-                    while (true)
-                    {
-                        Console.Write("Overwrite " + Path.GetFileName(file) + "? ([Y]es, [N]o, Yes to [A]ll, [S]kip All): ");
-                        answer = Console.ReadLine();
-
-                        if (answer != null)
-                        {
-                            answer = answer.Length > 0 ? answer.ToLowerInvariant()[0].ToString() : " ";
-                            if (answer == "a")
-                            {
-                                Overwrite = true;
-                                break;
-                            }
-                            else if (answer == "s")
-                            {
-                                Overwrite = false;
-                                break;
-                            }
-                            else if (answer == "y" || answer == "n")
-                                break;
-                        }
-                    }
-                }
-                    
-                if (answer == "y" || answer == "a")
-                {
-                    File.Delete(backup);
-                }
-                else
-                {
-                    CheckoutAndWrite(file, File.ReadAllBytes(backup), true);
-                    File.Delete(backup);
-                }
-                
+                CheckoutAndWrite(file, fileSystem.ReadAllBytes(backup));
+                fileSystem.DeleteFile(backup);
             }
         }
+    }
 
-        public static void ExecuteTSC(string workingDirectory, string arguments)
+    public void ExecuteTSC(string workingDirectory, string arguments)
+    {
+        if (NoUserInteraction)
+            return;
+
+        if (string.IsNullOrEmpty(TSCPath) ||
+            !fileSystem.FileExists(TSCPath))
         {
-            if (TSCPath.IsNullOrEmpty() ||
-                !File.Exists(TSCPath))
-            {
-                if (TSCPath.IsNullOrEmpty())
-                    throw new InvalidOperationException(
-                        "Couldn't locate TSC.EXE file which is required for TypeScript compilation. " +
-                        "Please install it, or if it is not installed to default location, " +
-                        "set its path in CodeGenerator.config file (TSCPath setting)!");
-
-                throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture,
-                    "Couldn't locate TSC.EXE file at '{0}' which is required for TypeScript compilation. " +
+            if (string.IsNullOrEmpty(TSCPath))
+                throw new InvalidOperationException(
+                    "Couldn't locate TSC.EXE file which is required for TypeScript compilation. " +
                     "Please install it, or if it is not installed to default location, " +
-                    "set its path in CodeGenerator.config file! (TSCPath setting)", TSCPath));
-            }
+                    "set its path in CodeGenerator.config file (TSCPath setting)!");
 
-            var psi = new ProcessStartInfo(TSCPath, arguments)
-            {
-                WorkingDirectory = workingDirectory
-            };
-            Process.Start(psi).WaitForExit(10000);
+            throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture,
+                "Couldn't locate TSC.EXE file at '{0}' which is required for TypeScript compilation. " +
+                "Please install it, or if it is not installed to default location, " +
+                "set its path in CodeGenerator.config file! (TSCPath setting)", TSCPath));
         }
+
+        var psi = new ProcessStartInfo(TSCPath, arguments)
+        {
+            WorkingDirectory = workingDirectory
+        };
+        Process.Start(psi).WaitForExit(10000);
     }
 }
